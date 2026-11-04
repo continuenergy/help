@@ -5,7 +5,7 @@
            xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
            xsi:type="TaskPaneApp">
   <Id>f525dd73-cc2e-4a64-ab05-7db98d785b59</Id>
-  <Version>1.1.0.0</Version>
+  <Version>1.2.0.0</Version>
   <ProviderName>Ideer Creative</ProviderName>
   <DefaultLocale>en-GB</DefaultLocale>
   <DisplayName DefaultValue="Continu Studio"/>
@@ -34,15 +34,15 @@
           </GetStarted>
           <FunctionFile resid="Commands.Url"/>
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
-            <OfficeTab id="TabHome">
-              <Group id="ContinuHelp.Group">
+            <CustomTab id="Continu.Tab">
+              <Group id="ContinuStudio.Group">
                 <Label resid="Group.Label"/>
                 <Icon>
                   <bt:Image size="16" resid="Icon.16"/>
                   <bt:Image size="32" resid="Icon.32"/>
                   <bt:Image size="80" resid="Icon.80"/>
                 </Icon>
-                <Control xsi:type="Button" id="ContinuHelp.Button">
+                <Control xsi:type="Button" id="ContinuStudio.Button">
                   <Label resid="Button.Label"/>
                   <Supertip>
                     <Title resid="Button.Label"/>
@@ -59,7 +59,8 @@
                   </Action>
                 </Control>
               </Group>
-            </OfficeTab>
+              <Label resid="Tab.Label"/>
+            </CustomTab>
           </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
@@ -77,11 +78,12 @@
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title" DefaultValue="Continu Studio is ready"/>
-        <bt:String id="Group.Label" DefaultValue="Continu"/>
+        <bt:String id="Group.Label" DefaultValue="Studio"/>
+        <bt:String id="Tab.Label" DefaultValue="Continu"/>
         <bt:String id="Button.Label" DefaultValue="Continu Studio"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Click Continu Studio on the Home tab to build decks, add brand assets and get help."/>
+        <bt:String id="GetStarted.Description" DefaultValue="Click Continu Studio on the Continu tab to build decks, add brand assets and get help."/>
         <bt:String id="Button.Tooltip" DefaultValue="Build Continu decks, add brand assets and get how-to help."/>
       </bt:LongStrings>
     </Resources>
