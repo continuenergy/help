@@ -5,11 +5,11 @@
            xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
            xsi:type="TaskPaneApp">
   <Id>f525dd73-cc2e-4a64-ab05-7db98d785b59</Id>
-  <Version>1.0.0.0</Version>
+  <Version>1.1.0.0</Version>
   <ProviderName>Ideer Creative</ProviderName>
   <DefaultLocale>en-GB</DefaultLocale>
-  <DisplayName DefaultValue="Continu Help"/>
-  <Description DefaultValue="How-to videos and slide checks for the Continu PowerPoint template."/>
+  <DisplayName DefaultValue="Continu Studio"/>
+  <Description DefaultValue="Build Continu decks, add brand assets and get how-to help, inside PowerPoint."/>
   <IconUrl DefaultValue="https://continuenergy.github.io/help/addin/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://continuenergy.github.io/help/addin/icon-64.png"/>
   <SupportUrl DefaultValue="https://continuenergy.github.io/help/"/>
@@ -76,13 +76,13 @@
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://continuenergy.github.io/help/"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Continu Help is ready"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Continu Studio is ready"/>
         <bt:String id="Group.Label" DefaultValue="Continu"/>
-        <bt:String id="Button.Label" DefaultValue="Continu Help"/>
+        <bt:String id="Button.Label" DefaultValue="Continu Studio"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Click Continu Help on the Home tab for how-to videos and slide checks."/>
-        <bt:String id="Button.Tooltip" DefaultValue="Open how-to videos and slide checks for the Continu template."/>
+        <bt:String id="GetStarted.Description" DefaultValue="Click Continu Studio on the Home tab to build decks, add brand assets and get help."/>
+        <bt:String id="Button.Tooltip" DefaultValue="Build Continu decks, add brand assets and get how-to help."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
