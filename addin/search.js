@@ -34,6 +34,8 @@
     ["save", "export", "store", "keep", "download"],
     ["template", "potx", "master", "reuse"],
     ["button", "shape", "icon", "object"],
+    ["video", "videos", "clip", "movie", "film", "youtube", "you tube", "footage", "animation"],
+    ["full screen", "fullscreen", "whole screen", "big"],
     ["help", "how", "guide"]
   ];
   const STOP = new Set("a an the to of in on at for by with and or i my me we our it its this that is are be can do does how what where why when you your into from up out please make want need get just some can t cant wont isnt".split(" "));
@@ -102,7 +104,7 @@
   // items: [{title, area, keywords, steps}] → ranked [{item, score, all}]
   window.smartSearch = function (query, items) {
     items.forEach(it => { if (!it._text) { it._title = norm(it.title); it._text = norm([it.title, it.area, it.keywords || "", (it.steps || []).join(" ")].join(" ")); } });
-    const q = norm(query);
+    const q = norm(query).replace(/\byou tube\b/g, "youtube").replace(/\bfull screen\b/g, "fullscreen");
     if (!q) return [];
     let words = q.split(" ").filter(w => !STOP.has(w));
     if (!words.length) words = q.split(" ");
