@@ -9,96 +9,118 @@
 <style>
 :root{--navy:#324E64;--navy2:#2A4356;--lime:#B5EB03;--ink:#FFFFFF;--soft:#3B5A72;--muted:#C2D0DA}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--navy);color:var(--ink);font-family:Effra,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45;padding:16px 16px 28px}
-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-header img{width:28px;height:28px}
+body{background:var(--navy);color:var(--ink);font-family:Effra,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45;padding:14px 14px 28px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+header img{width:26px;height:26px}
 header b{font-weight:500;font-size:17px}
-input{width:100%;border:0;border-radius:20px;padding:10px 14px;font:inherit;background:var(--soft);color:var(--ink);margin-bottom:14px}
-input::placeholder{color:var(--muted)}
-.topic{background:var(--soft);border-radius:14px;margin-bottom:10px;overflow:hidden}
-.topic button.head{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 14px;box-sizing:border-box}
-.topic .area{font-size:11px;color:var(--lime);display:block}
-.topic .name{font-size:15px}
-.topic .chev{color:var(--lime);font-size:18px;transition:transform .2s}
-.topic.open .chev{transform:rotate(90deg)}
-.body{display:none;padding:0 14px 14px}
-.topic.open .body{display:block}
-video{width:100%;border-radius:10px;display:block;margin-bottom:10px;background:#000}
-ol{padding-left:0;list-style:none;counter-reset:s}
-ol li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:6px}
+.tabs{display:flex;background:var(--navy2);border-radius:22px;padding:4px;margin-bottom:14px}
+.tabs button{all:unset;cursor:pointer;flex:1;text-align:center;padding:8px 0;border-radius:18px;font-size:14px;color:var(--muted)}
+.tabs button.on{background:var(--lime);color:var(--navy);font-weight:600}
+.pane{display:none}.pane.on{display:block}
+.fi{display:block;width:100%;border:0;border-radius:12px;padding:9px 12px;font:inherit;font-size:14px;background:var(--soft);color:var(--ink);margin-bottom:10px}
+.fi::placeholder{color:var(--muted)}
+select.fi{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23B5EB03' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+.count{font-size:12px;color:var(--muted);margin:2px 2px 8px}
+.row{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;background:var(--soft);margin-bottom:6px}
+.row:hover{outline:1px solid var(--lime)}
+.row .a{display:block;font-size:11px;color:var(--lime)}
+.row .t{font-size:14px}
+.row .v{font-size:11px;color:var(--navy);background:var(--lime);border-radius:10px;padding:1px 7px;margin-left:8px;white-space:nowrap}
+.back{all:unset;cursor:pointer;color:var(--lime);font-size:13px;margin-bottom:10px;display:inline-block}
+.detail h3{font-weight:400;font-size:20px;line-height:1.2;margin:2px 0 12px}
+.detail .a{font-size:11px;color:var(--lime)}
+video{width:100%;border-radius:10px;display:block;margin-bottom:12px;background:#000}
+.soon{background:var(--soft);border-radius:10px;padding:14px;color:var(--muted);font-size:13px;margin-bottom:12px}
+ol{list-style:none;counter-reset:s}
+ol li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px}
 ol li:before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:50%;background:var(--lime);color:var(--navy);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
-h2{font-weight:500;font-size:13px;color:var(--lime);margin:22px 0 8px}
-.tool{background:var(--soft);border-radius:14px;padding:14px;margin-bottom:10px}
-.tool p{color:var(--muted);font-size:13px;margin-bottom:10px}
-.btn{all:unset;cursor:pointer;background:var(--lime);color:var(--navy);font-weight:600;border-radius:18px;padding:8px 14px;font-size:13px}
+.card{background:var(--soft);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h4{font-weight:500;font-size:15px;margin-bottom:4px}
+.card p{color:var(--muted);font-size:13px;margin-bottom:12px}
+.card .fi{background:var(--navy2)}
+label.l{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+label.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:2px 0 14px;cursor:pointer}
+label.chk input{width:16px;height:16px;margin-top:2px;flex:0 0 16px;accent-color:#B5EB03}
+.btn{all:unset;cursor:pointer;background:var(--lime);color:var(--navy);font-weight:600;border-radius:18px;padding:8px 16px;font-size:13px}
 .out{margin-top:10px;font-size:13px;white-space:pre-line}
-.note{color:var(--muted);font-size:12px;margin-top:18px}
+.note{color:var(--muted);font-size:12px;margin-top:16px}
 a{color:var(--lime)}
-label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
-.fi{display:block;width:100%;margin:4px 0 0;border:0;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;background:var(--navy2);color:var(--ink)}
-label.chk{display:flex;gap:8px;align-items:center;font-size:13px;margin:4px 0 12px}
 </style>
 </head>
 <body>
 <header><img src="icon-64.png" alt=""><b>Continu Help</b></header>
-<input id="q" type="search" placeholder="What do you need help with?" aria-label="Search help">
-<div id="list"></div>
+<div class="tabs" role="tablist"><button class="on" data-p="help">Help</button><button data-p="decks">Presentations</button></div>
 
-<h2>Build a deck</h2>
-<div class="tool">
-  <p>Test: builds the Continu sales proposal from the tagged slides in this deck, and puts it at the top.</p>
-  <label class="f">Company<input class="fi" id="bCompany" placeholder="Company name"></label>
-  <label class="f">Presenter<select class="fi" id="bPresenter"><option>Alison McFadden</option><option>Gavin</option><option>Someone else</option></select></label>
-  <label class="chk"><input type="checkbox" id="bCall" checked> There's been a discovery call</label>
-  <button class="btn" id="build">Build deck</button>
-  <div class="out" id="buildOut"></div>
-</div>
+<section class="pane on" id="help">
+  <div id="listView">
+    <select class="fi" id="area" aria-label="Filter topics"></select>
+    <input class="fi" id="q" type="search" placeholder="Search help" aria-label="Search help">
+    <p class="count" id="count"></p>
+    <div id="list"></div>
+    <p class="note">Full help site: <a href="https://continuenergy.github.io/help/" target="_blank" rel="noopener">continuenergy.github.io/help</a></p>
+  </div>
+  <div id="detailView" class="detail" hidden></div>
+</section>
 
-<h2>Check this slide</h2>
-<div class="tool">
-  <p>Lists any text on the selected slide that isn't in the Continu font.</p>
-  <button class="btn" id="fonts">Check fonts</button>
-  <div class="out" id="fontsOut"></div>
-</div>
-<div class="tool">
-  <p>Test only: adds a small note to the selected slide, to prove the add-in can change it. Delete it afterwards.</p>
-  <button class="btn" id="note">Add a test note</button>
-  <div class="out" id="noteOut"></div>
-</div>
-<p class="note">Full help: <a href="https://continuenergy.github.io/help/" target="_blank" rel="noopener">continuenergy.github.io/help</a></p>
+<section class="pane" id="decks">
+  <div class="card">
+    <h4>Build a deck</h4>
+    <p>Copies the right slides from the library to the top of this deck, in order.</p>
+    <label class="l" for="bType">Deck</label>
+    <select class="fi" id="bType"><option value="energy-user">Sales proposal (32 slides)</option></select>
+    <label class="l" for="bCompany">Company</label>
+    <input class="fi" id="bCompany" placeholder="Company name">
+    <label class="l" for="bPresenter">Presenter</label>
+    <select class="fi" id="bPresenter"><option>Alison McFadden</option><option>Gavin</option><option>Someone else</option></select>
+    <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
+    <button class="btn" id="build">Build deck</button>
+    <div class="out" id="buildOut"></div>
+  </div>
+  <div class="card">
+    <h4>Check fonts</h4>
+    <p>Lists any text on the selected slide that isn't in the Continu font.</p>
+    <button class="btn" id="fonts">Check fonts</button>
+    <div class="out" id="fontsOut"></div>
+  </div>
+</section>
 
 <script>
-const TOPICS = [
- {id:"crop-image", area:"Images", title:"Crop an image", video:"crop-image.mp4", keywords:"trim cut picture photo",
-  steps:["Click the picture","Open the Picture Format tab","Click Crop (in the Size group)","Drag the picture or its corners to reposition it","Click Crop again, or press Esc, to finish"]},
- {id:"link-text", area:"Links", title:"Hyperlink text", video:"link-text.mp4", keywords:"link url website hyperlink",
-  steps:["Select the text you want to link","Right-click and choose Link (or Ctrl+K)","Type or paste the web address, then click OK","Click away – the text is now a link"]},
- {id:"drag-picture", area:"Images", title:"Drag a picture in from a folder", video:"drag-picture.mp4", keywords:"drop finder explorer replace image photo",
-  steps:["Open the folder in File Explorer next to PowerPoint","Drag the picture onto the empty picture box on the slide","Let go – it drops into the frame"]}
-];
+const TOPICS = [{"id": "crop-image", "area": "Images", "title": "Crop an image", "keywords": "trim cut picture photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click Crop (in the Size group)", "Drag the picture or its corners to reposition it", "Click Crop again, or press Esc, to finish"], "video": "crop-image.mp4"}, {"id": "replace-picture", "area": "Images", "title": "Replace a picture", "keywords": "swap change image photo", "steps": ["Right-click the picture", "Choose Change Picture → From a File…", "Pick your image – it keeps the same size and position"]}, {"id": "drag-picture", "area": "Images", "title": "Drag a picture in from a folder", "keywords": "drop finder explorer replace image photo", "steps": ["Open the folder in File Explorer next to PowerPoint", "Drag the picture onto the empty picture box on the slide", "Let go – it drops into the frame"], "video": "drag-picture.mp4"}, {"id": "fill-fit", "area": "Images", "title": "Fill or fit a picture in its frame", "keywords": "crop resize image photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click the small arrow under Crop", "Choose Fill to fill the frame, or Fit to show the whole picture", "Click Crop to finish"]}, {"id": "background-colour", "area": "Slides", "title": "Change the background colour", "keywords": "background color colour dark light fill navy white theme", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the light or dark version of the same layout – your content moves across"]}, {"id": "paste-text", "area": "Text", "title": "Paste text without its formatting", "keywords": "paste keep text only plain word email font wrong", "steps": ["Copy the text from Word, email or a web page", "Click into the text box on the slide", "Right-click and choose Keep Text Only (the clipboard icon with an A)"]}, {"id": "format-painter", "area": "Text", "title": "Copy formatting with Format Painter", "keywords": "style match brush copy format", "steps": ["Click inside the text that has the style you want", "On the Home tab, click Format Painter (the brush)", "Drag across the text you want to change"]}, {"id": "green-words", "area": "Text", "title": "Turn key words green", "keywords": "highlight colour color emphasis font", "steps": ["Select the word or phrase", "On the Home tab, click the arrow next to Font Colour", "Choose the Continu green from Theme Colours"]}, {"id": "fit-text", "area": "Text", "title": "Make text fit without shrinking it", "keywords": "overflow too long shrink font size autofit", "steps": ["Click into the text box and see where the text runs past the box", "Shorten the copy – aim for the same number of lines as the original", "Keep the font size as it is; never resize the box"]}, {"id": "link-text", "area": "Links", "title": "Hyperlink text", "keywords": "link url website hyperlink", "steps": ["Select the text you want to link", "Right-click and choose Link (or Ctrl+K)", "Type or paste the web address, then click OK", "Click away – the text is now a link"], "video": "link-text.mp4"}, {"id": "link-object", "area": "Links", "title": "Hyperlink a button or image", "keywords": "link shape icon picture button url slide", "steps": ["Click the edge of the button or image so the whole thing is selected", "Press Ctrl+K (or Insert → Link)", "Type a web address – or choose Place in This Document and pick a slide", "Click OK"]}, {"id": "new-slide", "area": "Slides", "title": "Add a new slide from a layout", "keywords": "insert new slide layout template", "steps": ["On the Home tab, click the arrow on New Slide", "Pick the layout you need", "Click into the boxes to add your content"]}, {"id": "change-layout", "area": "Slides", "title": "Change a slide's layout", "keywords": "columns 3 4 5 switch layout design", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the layout you want – e.g. 4 columns instead of 3 – your content moves into the new boxes"]}, {"id": "reset-slide", "area": "Slides", "title": "Reset a slide to its design", "keywords": "reset fix moved broken design", "steps": ["Select the slide", "On the Home tab, click Reset", "Positions, sizes and text styles go back to the template – your words stay"]}, {"id": "reorder-slides", "area": "Slides", "title": "Reorder slides by dragging", "keywords": "move order drag drop sections", "steps": ["In the slide thumbnails on the left, click a slide", "Drag it up or down to its new place", "Let go – drag onto a section name to move it into that section"]}, {"id": "add-table", "area": "Tables", "title": "Add a table", "keywords": "table grid rows columns insert", "steps": ["Click the table icon in an empty content box – or go to Insert → Table", "Choose how many columns and rows you need", "Click into the cells and type"]}, {"id": "table-rows", "area": "Tables", "title": "Add or delete rows and columns", "keywords": "table row column insert delete remove", "steps": ["Click into a cell next to where you want the change", "Open the table Layout tab", "Click Insert Above / Below / Left / Right – or Delete to remove"]}, {"id": "table-style", "area": "Tables", "title": "Apply the Continu table style", "keywords": "table style design colours colors header", "steps": ["Click anywhere in the table", "Open the Table Design tab", "Pick a style from the gallery – the first row uses the Continu colours"]}, {"id": "paste-excel-table", "area": "Tables", "title": "Paste a table from Excel", "keywords": "excel spreadsheet paste table cells", "steps": ["Copy the cells in Excel", "In PowerPoint, click on the slide and paste", "Click the paste icon that appears and choose Use Destination Styles", "Then apply a style from Table Design"]}, {"id": "add-chart", "area": "Charts", "title": "Add a chart", "keywords": "chart graph bar line pie insert", "steps": ["Click the chart icon in an empty content box – or go to Insert → Chart", "Pick the chart type and click OK", "Type your numbers into the sheet that opens, then close it"]}, {"id": "chart-data", "area": "Charts", "title": "Edit chart data", "keywords": "chart data numbers change update graph", "steps": ["Click the chart", "Open the Chart Design tab", "Click Edit Data, change the numbers, then close the sheet"]}, {"id": "chart-colours", "area": "Charts", "title": "Change chart colours to Continu colours", "keywords": "chart colours colors theme brand palette", "steps": ["Click the chart", "Open the Chart Design tab", "Click Change Colours and pick a palette – they all use the Continu theme colours"]}, {"id": "save-template", "area": "Saving", "title": "Save your deck as a template", "keywords": "save potx template file copy", "steps": ["Click File → Save As and pick a folder", "Under file type choose PowerPoint Template (*.potx)", "Name it and click Save – it appears under File → New → Personal"]}];
 
 // Usage tracking hook: does nothing until an analytics service is connected.
 function track(event, detail){ try{ if (window.continuTrack) window.continuTrack(event, detail); }catch(e){} }
-
-const list = document.getElementById("list");
-function render(){
-  const f = document.getElementById("q").value.trim().toLowerCase();
-  list.innerHTML = TOPICS.filter(t => !f || (t.title+" "+t.area+" "+t.keywords+" "+t.steps.join(" ")).toLowerCase().includes(f)).map(t => `
-   <div class="topic" data-id="${t.id}">
-     <button class="head"><span><span class="area">${t.area}</span><span class="name">${t.title}</span></span><span class="chev">›</span></button>
-     <div class="body"><video controls muted loop playsinline preload="none" poster="${t.video.replace(".mp4",".jpg")}" src="${t.video}"></video><ol>${t.steps.map(s=>`<li>${s}</li>`).join("")}</ol></div>
-   </div>`).join("") || `<p class="note">No topic matches that yet. Try the full help site below.</p>`;
-  list.querySelectorAll(".topic").forEach(el => el.querySelector(".head").onclick = () => {
-    const open = !el.classList.contains("open");
-    list.querySelectorAll(".topic").forEach(o => { o.classList.remove("open"); o.querySelector("video").pause(); });
-    if (open){ el.classList.add("open"); const v = el.querySelector("video"); v.currentTime = 0; v.play().catch(()=>{}); track("open-topic", el.dataset.id); }
-  });
-}
-document.getElementById("q").oninput = render;
-render();
-
 function ready(){ return typeof PowerPoint !== "undefined"; }
+const $ = id => document.getElementById(id);
 
+// tabs
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.id === b.dataset.p));
+  track("tab", b.dataset.p);
+});
+
+// help list
+const areas = [...new Set(TOPICS.map(t => t.area))];
+$("area").innerHTML = `<option value="">All topics (${TOPICS.length})</option>` + areas.map(a => `<option value="${a}">${a} (${TOPICS.filter(t => t.area === a).length})</option>`).join("");
+function render(){
+  const a = $("area").value, f = $("q").value.trim().toLowerCase();
+  const list = TOPICS.filter(t => (!a || t.area === a) && (!f || (t.title + " " + t.area + " " + t.keywords + " " + t.steps.join(" ")).toLowerCase().includes(f)));
+  $("count").textContent = list.length === TOPICS.length ? `${list.length} topics` : `${list.length} of ${TOPICS.length} topics`;
+  $("list").innerHTML = list.map(t => `<button class="row" data-id="${t.id}"><span><span class="a">${t.area}</span><span class="t">${t.title}</span></span>${t.video ? '<span class="v">Video</span>' : ''}</button>`).join("") || `<p class="note">Nothing matches that yet. Try the full help site.</p>`;
+  $("list").querySelectorAll(".row").forEach(r => r.onclick = () => open(r.dataset.id));
+}
+function open(id){
+  const t = TOPICS.find(x => x.id === id); if (!t) return;
+  $("listView").hidden = true; $("detailView").hidden = false;
+  $("detailView").innerHTML = `<button class="back" id="back">‹ All topics</button><div class="a">${t.area}</div><h3>${t.title}</h3>` +
+    (t.video ? `<video controls muted loop playsinline autoplay poster="${t.video.replace(".mp4", ".jpg")}" src="${t.video}"></video>` : `<div class="soon">The animation for this one is coming soon. The steps are below.</div>`) +
+    `<ol>${t.steps.map(s => `<li>${s}</li>`).join("")}</ol>`;
+  $("back").onclick = () => { const v = $("detailView").querySelector("video"); if (v) v.pause(); $("detailView").hidden = true; $("listView").hidden = false; };
+  track("open-topic", id);
+}
+$("area").onchange = render; $("q").oninput = render; render();
+
+// fonts
 document.getElementById("fonts").onclick = async () => {
   const out = document.getElementById("fontsOut"); out.textContent = "Checking…"; track("check-fonts");
   if (!ready()){ out.textContent = "Open this inside PowerPoint to use it."; return; }
@@ -121,29 +143,15 @@ document.getElementById("fonts").onclick = async () => {
   } catch(e){ out.textContent = "Couldn't check this slide: " + e.message; }
 };
 
-document.getElementById("note").onclick = async () => {
-  const out = document.getElementById("noteOut"); track("test-note");
-  if (!ready()){ out.textContent = "Open this inside PowerPoint to use it."; return; }
-  try {
-    await PowerPoint.run(async ctx => {
-      const sel = ctx.presentation.getSelectedSlides(); sel.load("items"); await ctx.sync();
-      if (!sel.items.length){ out.textContent = "Select a slide first."; return; }
-      const tb = sel.items[0].shapes.addTextBox("Added by the Continu Help add-in", {left: 40, top: 40, width: 320, height: 40});
-      tb.name = "Continu Help test note";
-      await ctx.sync();
-      out.textContent = "Added. Delete it whenever you like.";
-    });
-  } catch(e){ out.textContent = "Couldn't add the note: " + e.message; }
-};
 
 // ---------- Build a deck (test) ----------
-const RECIPE = "energy-user";
+
 function say(t){ document.getElementById("buildOut").textContent = t; }
 document.getElementById("build").onclick = async () => {
   const company = document.getElementById("bCompany").value.trim() || "Company name";
   const presenter = document.getElementById("bPresenter").value;
   const call = document.getElementById("bCall").checked;
-  track("build-deck", RECIPE);
+  const RECIPE = document.getElementById("bType").value; track("build-deck", RECIPE);
   if (!ready()){ say("Open this inside PowerPoint to use it."); return; }
   const need = ["1.3","1.5","1.8"].map(v => v + (Office.context.requirements.isSetSupported("PowerPointApi", v) ? " yes" : " no")).join(", ");
   const t0 = Date.now();
@@ -195,6 +203,7 @@ document.getElementById("build").onclick = async () => {
     });
   } catch(e){ say("Stopped: " + e.message + "\nPowerPoint API support: " + need); }
 };
+
 
 if (window.Office) Office.onReady(() => {});
 </script>
