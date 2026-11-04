@@ -9,3 +9,4 @@ Live site: https://continuenergy.github.io/help/
 - `assets/Icons/` – the PowerPoint and Word app icons.
 
 Set up and maintained by Ideer Creative.
+
