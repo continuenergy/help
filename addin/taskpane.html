@@ -201,6 +201,11 @@ header{margin-bottom:16px}
 html[data-theme=dark] .mode .knob{transform:translateX(33px)}
 html[data-theme=light] .mode .sun,html[data-theme=dark] .mode .moon{color:#2A4356}
 html[data-theme=light] .mode .moon,html[data-theme=dark] .mode .sun{opacity:.55}
+.layerrow{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.layerrow[hidden]{display:none}
+.layerrow span{font-size:13px;color:var(--muted);line-height:1.35}
+.pill{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;flex:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.pill:hover{outline:2px solid var(--accent)}
 </style>
 </head>
 <body>
@@ -230,6 +235,7 @@ html[data-theme=light] .mode .moon,html[data-theme=dark] .mode .sun{opacity:.55}
   <select class="fi" id="aCat" aria-label="Category"></select>
   <input class="fi" id="aQ" type="search" placeholder="Search images" aria-label="Search brand assets">
   <div class="crow"><p class="count" id="aCount"></p><label class="tgl" id="swapWrap" hidden><span>Image swap</span><button class="sw-t" id="swapMode" role="switch" aria-checked="false" aria-label="Image swap"><i></i></button><em id="swapState">Off</em></label></div>
+  <div class="layerrow" id="layerRow"><button class="pill" id="sendBack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><rect x="4" y="4" width="11" height="11" rx="2" fill="var(--surface)"/></svg>Send selected to back</button><span>Puts a picture or box behind everything else on the slide.</span></div>
   <p class="swaphint" id="swapHint" hidden>Swap is on. On your slide, click the one picture you want to change, then choose its replacement here.</p>
   <div class="grid" id="aGrid"></div>
   <p class="note" id="aTip"></p>
@@ -401,7 +407,7 @@ function renderAssets(){
   $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${esc(a.title)}"><img src="${a.thumb}" alt="" loading="lazy" draggable="false"${a.set ? ` class="ico ${a.set.toLowerCase()}"` : ""}><span>${esc(a.title)}${a.cat && !$("aCat").value ? `<small>${esc(a.cat)}</small>` : ""}</span></button>`).join("") || `<p class="note">Nothing matches that. Try other words, or choose a different category.</p>`;
   $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
   $("aTip").textContent = TIPS[t] || "";
-  $("swapWrap").hidden = t !== "Images"; if (t !== "Images" && SWAP) setSwap(false);
+  $("swapWrap").hidden = t !== "Images"; $("layerRow").hidden = t !== "Images"; if (t !== "Images" && SWAP) setSwap(false);
 }
 async function insertAsset(btn){
   const a = ASSETS.find(x => x.id === btn.dataset.id); const out = $("aOut");
@@ -476,6 +482,51 @@ $("swapMode").onclick = () => { setSwap(!SWAP); track("swap-mode", SWAP ? "on" :
 
 function toast(msg){ let t = document.getElementById("toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
   t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), msg.length > 60 ? 7000 : 3500); }
+
+// ---------- Send to back ----------
+async function sendSelectedToBack(){
+  let info = null;
+  await PowerPoint.run(async ctx => {
+    const shapes = ctx.presentation.getSelectedShapes(); shapes.load("items/id,items/name"); await ctx.sync();
+    if (!shapes.items.length) throw new Error("Nothing is selected. Click the picture or box on your slide first.");
+    try { shapes.items.forEach(sh => sh.setZOrder("SendToBack")); await ctx.sync(); info = "done"; }
+    catch(e) {
+      const slides = ctx.presentation.getSelectedSlides(); slides.load("items/id"); await ctx.sync();
+      const ex = slides.items[0].exportAsBase64(); await ctx.sync();
+      info = { slideId: slides.items[0].id, shapes: shapes.items.map(x => ({ id: x.id, name: x.name })), b64: ex.value };
+    }
+  });
+  if (info === "done") return;
+  const zip = await JSZip.loadAsync(info.b64, { base64: true });
+  const path = Object.keys(zip.files).find(f => /^ppt\/slides\/slide\d+\.xml$/.test(f));
+  const doc = new DOMParser().parseFromString(await zip.file(path).async("string"), "application/xml");
+  const P = "http://schemas.openxmlformats.org/presentationml/2006/main";
+  const tree = doc.getElementsByTagNameNS(P, "spTree")[0];
+  const kids = [...tree.children];
+  const first = kids.find(k => k.localName !== "nvGrpSpPr" && k.localName !== "grpSpPr");
+  let moved = 0;
+  for (const want of info.shapes.slice().reverse()) {
+    const digits = (String(want.id).match(/\d+/) || [""])[0];
+    const el = kids.find(k => { const c = k.getElementsByTagNameNS(P, "cNvPr")[0]; return c && (c.getAttribute("id") === digits || c.getAttribute("name") === want.name); });
+    if (el && el !== first) { tree.insertBefore(el, tree.firstElementChild && [...tree.children].find(k => k.localName !== "nvGrpSpPr" && k.localName !== "grpSpPr")); moved++; }
+    else if (el) moved++;
+  }
+  if (!moved) throw new Error("Couldn't find the selected item on the slide.");
+  zip.file(path, new XMLSerializer().serializeToString(doc));
+  const out = await zip.generateAsync({ type: "base64" });
+  await PowerPoint.run(async ctx => {
+    ctx.presentation.insertSlidesFromBase64(out, { formatting: "UseDestinationTheme", targetSlideId: info.slideId }); await ctx.sync();
+    const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
+    const i = all.items.findIndex(x => x.id === info.slideId); const fresh = all.items[i + 1];
+    all.items[i].delete(); await ctx.sync();
+    try { ctx.presentation.setSelectedSlides([fresh.id]); await ctx.sync(); } catch(e) {}
+  });
+}
+$("sendBack").onclick = async () => {
+  track("send-to-back");
+  if (!ready()) { toast("Open this inside PowerPoint to use it."); return; }
+  try { await sendSelectedToBack(); toast("Sent to the back."); } catch(e) { toast(e.message); }
+};
 // ---------- Presentations sub-views ----------
 function showDeckView(id){ $("decksHome").hidden = !!id; ["flowView","formatView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
 document.querySelectorAll(".opencard").forEach(c => c.onclick = () => showDeckView(c.dataset.view));
