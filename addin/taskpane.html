@@ -55,6 +55,7 @@ a{color:var(--lime)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .asset{all:unset;cursor:pointer;display:block;border-radius:10px;overflow:hidden;background:var(--soft);position:relative}
 .asset img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block}
+.asset img[src$=".png"]{object-fit:contain;padding:14px;background:var(--navy2)}
 .asset span{display:block;font-size:12px;padding:6px 8px}
 .asset:hover{outline:2px solid var(--lime)}
 .asset.busy{opacity:.5}
@@ -80,7 +81,7 @@ a{color:var(--lime)}
   <select class="fi" id="aCat" aria-label="Category"></select>
   <p class="count" id="aCount"></p>
   <div class="grid" id="aGrid"></div>
-  <p class="note">Tip: click an empty picture box on your slide first, then choose an image. Otherwise it's added to the slide for you to move.</p>
+  <p class="note" id="aTip"></p>
   <div class="out" id="aOut"></div>
 </section>
 
@@ -146,8 +147,15 @@ $("area").onchange = render; $("q").oninput = render; render();
 
 // brand assets: images now; videos and icons can be added to the same list later
 const ASSETS = [
- {id:"ENG-020", type:"Images", cat:"Energy: natural", title:"Sunrise field", file:"assets/ENG-020.jpg", thumb:"assets/ENG-020-thumb.jpg"}
+ {id:"ENG-020", type:"Images", kind:"image", cat:"Energy: natural", title:"Sunrise field", file:"assets/ENG-020.jpg", thumb:"assets/ENG-020-thumb.jpg"},
+ {id:"VID-001", type:"Videos", kind:"slide", cat:"Brand animation", title:"Energy pulse", file:"assets/video-slide.pptx", thumb:"assets/pulse.jpg"},
+ {id:"ICN-001", type:"Icons", kind:"svg", cat:"Energy", title:"Power", file:"assets/icon-bolt.svg", thumb:"assets/icon-bolt-thumb.png"}
 ];
+const TIPS = {
+  Images: "Tip: click an empty picture box on your slide first, then choose an image. Otherwise it's added to the slide for you to move.",
+  Videos: "Videos are added as a new slide straight after the one you're on.",
+  Icons: "Icons are added to your slide as shapes you can resize and recolour. Try selecting an empty picture box first too."
+};
 const types = [...new Set(ASSETS.map(a => a.type))];
 $("aType").innerHTML = types.map(t => `<option>${t}</option>`).join("");
 function renderAssets(){
@@ -160,20 +168,34 @@ function renderAssets(){
   $("aCount").textContent = `${list.length} ${list.length === 1 ? t.toLowerCase().replace(/s$/, "") : t.toLowerCase()}`;
   $("aGrid").innerHTML = list.map(a => `<button class="asset" data-id="${a.id}" title="Insert ${a.title}"><img src="${a.thumb}" alt=""><span>${a.title}</span></button>`).join("");
   $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
+  $("aTip").textContent = TIPS[t] || "";
 }
 async function insertAsset(btn){
   const a = ASSETS.find(x => x.id === btn.dataset.id); const out = $("aOut");
   track("insert-asset", a.id);
   if (!window.Office || !Office.context || !Office.context.document){ out.textContent = "Open this inside PowerPoint to use it."; return; }
-  btn.classList.add("busy"); out.textContent = "Adding the image…";
+  btn.classList.add("busy"); out.textContent = "Adding…";
+  const done = msg => { btn.classList.remove("busy"); out.textContent = msg; };
   try {
-    const blob = await (await fetch(a.file)).blob();
-    const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(",")[1]); fr.readAsDataURL(blob); });
-    Office.context.document.setSelectedDataAsync(b64, { coercionType: Office.CoercionType.Image }, res => {
-      btn.classList.remove("busy");
-      out.textContent = res.status === Office.AsyncResultStatus.Succeeded ? "Added." : "Couldn't add it: " + res.error.message;
-    });
-  } catch(e){ btn.classList.remove("busy"); out.textContent = "Couldn't add it: " + e.message; }
+    const res = await fetch(a.file);
+    if (a.kind === "svg"){
+      const svg = await res.text();
+      Office.context.document.setSelectedDataAsync(svg, { coercionType: Office.CoercionType.XmlSvg }, r => done(r.status === Office.AsyncResultStatus.Succeeded ? "Added." : "Couldn't add it: " + r.error.message));
+      return;
+    }
+    const b64 = await new Promise(async r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(",")[1]); fr.readAsDataURL(await res.blob()); });
+    if (a.kind === "slide"){
+      if (!ready()){ done("Open this inside PowerPoint to use it."); return; }
+      await PowerPoint.run(async ctx => {
+        const sel = ctx.presentation.getSelectedSlides(); sel.load("items/id"); await ctx.sync();
+        const opts = { formatting: "UseDestinationTheme" }; if (sel.items.length) opts.targetSlideId = sel.items[0].id;
+        ctx.presentation.insertSlidesFromBase64(b64, opts); await ctx.sync();
+      });
+      done("Added as the next slide.");
+      return;
+    }
+    Office.context.document.setSelectedDataAsync(b64, { coercionType: Office.CoercionType.Image }, r => done(r.status === Office.AsyncResultStatus.Succeeded ? "Added." : "Couldn't add it: " + r.error.message));
+  } catch(e){ done("Couldn't add it: " + e.message); }
 }
 $("aType").onchange = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
 
