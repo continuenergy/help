@@ -14,7 +14,7 @@ header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 header img{width:26px;height:26px}
 header b{font-weight:500;font-size:17px}
 .tabs{display:flex;background:var(--navy2);border-radius:22px;padding:4px;margin-bottom:14px}
-.tabs button{all:unset;cursor:pointer;flex:1;text-align:center;padding:8px 0;border-radius:18px;font-size:14px;color:var(--muted)}
+.tabs button{all:unset;cursor:pointer;flex:1;text-align:center;padding:8px 2px;border-radius:18px;font-size:13px;color:var(--muted);white-space:nowrap}
 .tabs button.on{background:var(--lime);color:var(--navy);font-weight:600}
 .pane{display:none}.pane.on{display:block}
 .fi{display:block;width:100%;border:0;border-radius:12px;padding:9px 12px;font:inherit;font-size:14px;background:var(--soft);color:var(--ink);margin-bottom:10px}
@@ -52,11 +52,17 @@ label.chk input{width:16px;height:16px;margin-top:2px;flex:0 0 16px;accent-color
 .out{margin-top:10px;font-size:13px;white-space:pre-line}
 .note{color:var(--muted);font-size:12px;margin-top:16px}
 a{color:var(--lime)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.asset{all:unset;cursor:pointer;display:block;border-radius:10px;overflow:hidden;background:var(--soft);position:relative}
+.asset img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block}
+.asset span{display:block;font-size:12px;padding:6px 8px}
+.asset:hover{outline:2px solid var(--lime)}
+.asset.busy{opacity:.5}
 </style>
 </head>
 <body>
 <header><img src="icon-64.png" alt=""><b>Continu Help</b></header>
-<div class="tabs" role="tablist"><button class="on" data-p="help">Help</button><button data-p="decks">Presentations</button></div>
+<div class="tabs" role="tablist"><button class="on" data-p="help">Help</button><button data-p="decks">Presentations</button><button data-p="brand">Brand assets</button></div>
 
 <section class="pane on" id="help">
   <div id="listView">
@@ -67,6 +73,15 @@ a{color:var(--lime)}
     <p class="note">Full help site: <a href="https://continuenergy.github.io/help/" target="_blank" rel="noopener">continuenergy.github.io/help</a></p>
   </div>
   <div id="detailView" class="detail" hidden></div>
+</section>
+
+<section class="pane" id="brand">
+  <select class="fi" id="aType" aria-label="Asset type"></select>
+  <select class="fi" id="aCat" aria-label="Category"></select>
+  <p class="count" id="aCount"></p>
+  <div class="grid" id="aGrid"></div>
+  <p class="note">Tip: click an empty picture box on your slide first, then choose an image. Otherwise it's added to the slide for you to move.</p>
+  <div class="out" id="aOut"></div>
 </section>
 
 <section class="pane" id="decks">
@@ -128,6 +143,39 @@ function open(id){
   track("open-topic", id);
 }
 $("area").onchange = render; $("q").oninput = render; render();
+
+// brand assets: images now; videos and icons can be added to the same list later
+const ASSETS = [
+ {id:"ENG-020", type:"Images", cat:"Energy: natural", title:"Sunrise field", file:"assets/ENG-020.jpg", thumb:"assets/ENG-020-thumb.jpg"}
+];
+const types = [...new Set(ASSETS.map(a => a.type))];
+$("aType").innerHTML = types.map(t => `<option>${t}</option>`).join("");
+function renderAssets(){
+  const t = $("aType").value, inType = ASSETS.filter(a => a.type === t);
+  const cats = [...new Set(inType.map(a => a.cat))];
+  const keep = $("aCat").value;
+  $("aCat").innerHTML = `<option value="">All categories (${inType.length})</option>` + cats.map(c => `<option value="${c}">${c} (${inType.filter(a => a.cat === c).length})</option>`).join("");
+  if (cats.includes(keep)) $("aCat").value = keep;
+  const c = $("aCat").value, list = inType.filter(a => !c || a.cat === c);
+  $("aCount").textContent = `${list.length} ${list.length === 1 ? t.toLowerCase().replace(/s$/, "") : t.toLowerCase()}`;
+  $("aGrid").innerHTML = list.map(a => `<button class="asset" data-id="${a.id}" title="Insert ${a.title}"><img src="${a.thumb}" alt=""><span>${a.title}</span></button>`).join("");
+  $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
+}
+async function insertAsset(btn){
+  const a = ASSETS.find(x => x.id === btn.dataset.id); const out = $("aOut");
+  track("insert-asset", a.id);
+  if (!window.Office || !Office.context || !Office.context.document){ out.textContent = "Open this inside PowerPoint to use it."; return; }
+  btn.classList.add("busy"); out.textContent = "Adding the image…";
+  try {
+    const blob = await (await fetch(a.file)).blob();
+    const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(",")[1]); fr.readAsDataURL(blob); });
+    Office.context.document.setSelectedDataAsync(b64, { coercionType: Office.CoercionType.Image }, res => {
+      btn.classList.remove("busy");
+      out.textContent = res.status === Office.AsyncResultStatus.Succeeded ? "Added." : "Couldn't add it: " + res.error.message;
+    });
+  } catch(e){ btn.classList.remove("busy"); out.textContent = "Couldn't add it: " + e.message; }
+}
+$("aType").onchange = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
 
 // fonts
 document.getElementById("fonts").onclick = async () => {
