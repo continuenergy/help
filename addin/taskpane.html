@@ -131,6 +131,23 @@ ol li{font-size:15px}
 .pane .btn{font-size:15px}
 .pane .card .soon{display:inline-block;padding:6px 14px;border-radius:16px;background:var(--field);margin:4px 0 0;font-size:14px}
 label.al{display:block;font-size:14px;color:var(--muted);margin:0 2px 6px}
+.thead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 2px 2px}
+.thead h3{font-weight:400;font-size:22px;margin:0}
+.thead .ic{width:38px;height:38px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--accentText);flex:none}
+.tcount{font-size:14px;color:var(--muted);margin:0 2px 14px}
+.tsec{margin-bottom:30px}
+/* breathing space */
+.pane{padding-top:4px}
+.fi{margin-bottom:14px}
+label.al{margin-bottom:8px}
+.count{margin:4px 2px 16px}
+.gcard{margin-bottom:16px}
+.grid{gap:12px}
+.card{margin-bottom:16px}
+.pane label.l{margin-top:6px;margin-bottom:6px;display:block}
+.tabs{margin-bottom:20px}
+header{margin-bottom:16px}
+.gcard:hover{outline:2px solid var(--accent)}
 </style>
 </head>
 <body>
@@ -140,7 +157,8 @@ label.al{display:block;font-size:14px;color:var(--muted);margin:0 2px 6px}
 
 <section class="pane" id="help">
   <div id="listView">
-    <select class="fi" id="area" aria-label="Choose a topic"></select>
+    <label class="al" for="area">Help guides by topic</label>
+    <select class="fi" id="area"></select>
     <input class="fi" id="q" type="search" placeholder="Search all help" aria-label="Search help">
     <div id="areaHead"></div>
     <p class="count" id="count"></p>
@@ -227,17 +245,11 @@ function render(){
     $("count").textContent = exact.length ? `${plural(exact.length, "guide")} found` : close.length ? "No exact match. These look closest:" : "";
     $("list").innerHTML = list.map(t => rowHtml(t, true)).join("") || `<p class="note">Nothing matches that yet. Try other words${curArea ? ", or choose All topics" : ""}, or the full help site.</p>`;
     clearTimeout(window.__qt); window.__qt = setTimeout(() => track("search", f + " → " + (list[0] ? list[0].id : "none")), 1200);
-  } else if (curArea) {
-    const list = TOPICS.filter(t => t.area === curArea), vids = list.filter(t => t.video).length;
-    $("areaHead").innerHTML = `<button class="back" id="toAreas">‹ All topics</button><div class="ahead"><h3>${curArea}</h3></div>`;
-    $("count").textContent = `${plural(list.length, "guide")}${vids ? `, ${vids} with video` : ""}`;
-    $("list").innerHTML = list.map(t => rowHtml(t, false)).join("");
-    $("toAreas").onclick = () => { curArea = ""; render(); };
   } else {
-    $("count").textContent = `Pick a topic. There are ${TOPICS.length} short guides in all.`;
-    $("cards").innerHTML = areas.map(a => { const n = TOPICS.filter(t => t.area === a).length;
-      return `<button class="acard" data-a="${a}"><span class="ic">${icon(a)}</span><span><b>${a}</b><small>${plural(n, "guide")}</small></span></button>`; }).join("");
-    $("cards").querySelectorAll(".acard").forEach(c => c.onclick = () => { curArea = c.dataset.a; render(); track("open-area", curArea); });
+    const show = curArea ? [curArea] : areas;
+    $("count").textContent = curArea ? "" : `${TOPICS.length} guides in ${areas.length} topics`;
+    $("list").innerHTML = show.map(a => { const list = TOPICS.filter(t => t.area === a), vids = list.filter(t => t.video).length;
+      return `<div class="tsec"><div class="thead"><h3>${a}</h3><span class="ic">${icon(a)}</span></div><p class="tcount">${plural(list.length, "guide")}${vids ? `, ${vids} with video` : ""}</p>${list.map(t => rowHtml(t, false)).join("")}</div>`; }).join("");
   }
   $("list").querySelectorAll(".row,.gcard").forEach(r => r.onclick = () => open(r.dataset.id));
 }
