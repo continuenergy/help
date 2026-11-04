@@ -17,7 +17,7 @@
     const doc = new DOMParser().parseFromString(await zip.file(slidePath).async("string"), "application/xml");
     const pics = [...doc.getElementsByTagNameNS(NS.p, "pic")];
     const idOf = pic => { const c = pic.getElementsByTagNameNS(NS.p, "cNvPr")[0]; return c ? { id: c.getAttribute("id"), name: c.getAttribute("name") } : {}; };
-    const digits = String(match.id || "").replace(/\D+/g, "");
+    const digits = (String(match.id || "").match(/\d+/) || [""])[0];
     let pic = pics.find(p => idOf(p).id === digits) || null;
     if (!pic) { const byName = pics.filter(p => idOf(p).name === match.name); if (byName.length === 1) pic = byName[0]; }
     if (!pic && pics.length === 1) pic = pics[0];
