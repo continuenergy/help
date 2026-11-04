@@ -111,6 +111,7 @@ body{font-size:15px}
 ol li{font-size:15px}
 .card h4{font-size:16.5px}.card p,label.chk,.soon,.out{font-size:14px}label.l{font-size:13px}
 .note{font-size:13px}.asset span{font-size:13px}
+.asset img{-webkit-user-drag:none;user-select:none}
 </style>
 </head>
 <body>
@@ -240,7 +241,7 @@ const ASSETS = [
 ];
 const TIPS = {
   Images: "Tip: click an empty picture box on your slide first, then choose an image. Otherwise it's added to the slide for you to move.",
-  Videos: "Videos are added as a new slide straight after the one you're on.",
+  Videos: "Click a video to add it as its own slide, straight after the one you're on. It doesn't matter what's selected.",
   Icons: "Icons are added to your slide as shapes you can resize and recolour. Try selecting an empty picture box first too."
 };
 const types = [...new Set(ASSETS.map(a => a.type))];
@@ -253,7 +254,7 @@ function renderAssets(){
   if (cats.includes(keep)) $("aCat").value = keep;
   const c = $("aCat").value, list = inType.filter(a => !c || a.cat === c);
   $("aCount").textContent = `${list.length} ${list.length === 1 ? t.toLowerCase().replace(/s$/, "") : t.toLowerCase()}`;
-  $("aGrid").innerHTML = list.map(a => `<button class="asset" data-id="${a.id}" title="Insert ${a.title}"><img src="${a.thumb}" alt=""><span>${a.title}</span></button>`).join("");
+  $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${a.title}"><img src="${a.thumb}" alt="" draggable="false"><span>${a.title}</span></button>`).join("");
   $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
   $("aTip").textContent = TIPS[t] || "";
 }
@@ -273,12 +274,15 @@ async function insertAsset(btn){
     const b64 = await new Promise(async r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(",")[1]); fr.readAsDataURL(await res.blob()); });
     if (a.kind === "slide"){
       if (!ready()){ done("Open this inside PowerPoint to use it."); return; }
-      await PowerPoint.run(async ctx => {
-        const sel = ctx.presentation.getSelectedSlides(); sel.load("items/id"); await ctx.sync();
-        const opts = { formatting: "UseDestinationTheme" }; if (sel.items.length) opts.targetSlideId = sel.items[0].id;
-        ctx.presentation.insertSlidesFromBase64(b64, opts); await ctx.sync();
-      });
-      done("Added as the next slide.");
+      let target = null;
+      try { await PowerPoint.run(async ctx => { const sel = ctx.presentation.getSelectedSlides(); sel.load("items/id"); await ctx.sync(); if (sel.items.length) target = sel.items[0].id; }); } catch(e) {}
+      try {
+        await PowerPoint.run(async ctx => { const o = { formatting: "UseDestinationTheme" }; if (target) o.targetSlideId = target; ctx.presentation.insertSlidesFromBase64(b64, o); await ctx.sync(); });
+      } catch(e) {
+        await PowerPoint.run(async ctx => { ctx.presentation.insertSlidesFromBase64(b64, { formatting: "UseDestinationTheme" }); await ctx.sync(); });
+        done("Added as a new slide at the end of the deck."); return;
+      }
+      done(target ? "Added as the next slide, with the video ready to play." : "Added as a new slide, with the video ready to play.");
       return;
     }
     Office.context.document.setSelectedDataAsync(b64, { coercionType: Office.CoercionType.Image }, r => done(r.status === Office.AsyncResultStatus.Succeeded ? "Added." : "Couldn't add it: " + r.error.message));
