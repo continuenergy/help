@@ -72,13 +72,14 @@
   }
   const allowed = w => w.length <= 3 ? 0 : w.length <= 5 ? 1 : 2;
 
-  let VOCAB = null; // every known word, for typo correction
+  const VOCABS = new Map(); // every known word, for typo correction, per list
   function vocab(items) {
-    if (VOCAB) return VOCAB;
+    const key = items.length + ":" + (items[0] ? items[0].title : "");
+    if (VOCABS.has(key)) return VOCABS.get(key);
     const v = new Set();
     items.forEach(it => norm(it._text).split(" ").forEach(w => w.length > 2 && v.add(w)));
     REL.forEach((set, k) => { v.add(k); set.forEach(x => x.split(" ").forEach(y => y.length > 2 && v.add(y))); });
-    return (VOCAB = [...v]);
+    const arr = [...v]; VOCABS.set(key, arr); return arr;
   }
 
   // expand one query word into weighted alternatives

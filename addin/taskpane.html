@@ -7,6 +7,7 @@
 <title>Continu Studio</title>
 <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 <script src="search.js"></script>
+<script src="assets.js"></script>
 <script>
 (function(){var t=null;try{t=localStorage.getItem('continuStudioTheme')}catch(e){}
 if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','light');window.__themeStored=!!t})();
@@ -118,6 +119,11 @@ ol li{font-size:15px}
 .gbtn{margin-top:12px;padding:7px 16px}
 .asset img.ico{object-fit:contain;padding:18px;background:var(--field)}
 .asset img.ico.white{background:#324E64}
+.asset span{line-height:1.3}
+.asset span small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.asset img{background:var(--field)}
+.grid{align-items:start}
+.fi:focus{outline:2px solid var(--accent);outline-offset:0}
 </style>
 </head>
 <body>
@@ -141,6 +147,7 @@ ol li{font-size:15px}
 <section class="pane" id="brand">
   <select class="fi" id="aType" aria-label="Asset type"></select>
   <select class="fi" id="aCat" aria-label="Category"></select>
+  <input class="fi" id="aQ" type="search" placeholder="Search images" aria-label="Search brand assets">
   <p class="count" id="aCount"></p>
   <div class="grid" id="aGrid"></div>
   <p class="note" id="aTip"></p>
@@ -241,36 +248,49 @@ function open(id){
 $("q").oninput = render; $("area").onchange = () => { curArea = $("area").value; $("q").value = ""; render(); if (curArea) track("open-area", curArea); }; render();
 
 // brand assets: images now; videos and icons can be added to the same list later
-const ASSETS = [
- {id:"ENG-020", type:"Images", kind:"image", cat:"Energy: natural", title:"Sunrise field", file:"assets/ENG-020.jpg", thumb:"assets/ENG-020-thumb.jpg"},
- {id:"VID-001", type:"Videos", kind:"slide", cat:"Brand animation", title:"Energy pulse", file:"assets/video-slide.pptx", thumb:"assets/pulse.jpg"},
- {id:"ICN-001W", type:"Icons", kind:"svg", set:"White", title:"Power", file:"assets/icon-bolt-white.svg", thumb:"assets/icon-bolt-white.svg"},
- {id:"ICN-001G", type:"Icons", kind:"svg", set:"Green", title:"Power", file:"assets/icon-bolt-green.svg", thumb:"assets/icon-bolt-green.svg"},
- {id:"ICN-001B", type:"Icons", kind:"svg", set:"Blue", title:"Power", file:"assets/icon-bolt-blue.svg", thumb:"assets/icon-bolt-blue.svg"}
-];
+const ASSETS = window.ASSETS || [];
 const TIPS = {
   Images: "Tip: click an empty picture box on your slide first, then choose an image. Otherwise it's added to the slide for you to move.",
   Videos: "Click a video to add it as its own slide, straight after the one you're on. It doesn't matter what's selected.",
-  Icons: "Icons are added to your slide as shapes you can resize and recolour. Try selecting an empty picture box first too."
+  Icons: "Icons are added to your slide as graphics you can resize. Choose the white set for dark backgrounds."
 };
-const types = [...new Set(ASSETS.map(a => a.type))];
+const types = ["Images", "Icons", "Videos"].filter(t => ASSETS.some(a => a.type === t));
 // each asset type has its own filter: images by category, icons by colour set, videos none
-const FILTERS = { Images: { key: "cat", all: "All categories" }, Icons: { key: "set", all: "All colours", options: ["White", "Green", "Blue"] }, Videos: null };
+const FILTERS = { Images: { key: "ckey", all: "All categories", grouped: true }, Icons: { key: "set", all: "All colours", options: ["White", "Green", "Blue"] }, Videos: null };
 $("aType").innerHTML = types.map(t => `<option>${t}</option>`).join("");
+ASSETS.forEach(a => { if (a.cat) a.ckey = (a.group || "") + "|" + a.cat; });
+const esc = v => String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+const SEARCH_ITEMS = {};
 function renderAssets(){
   const t = $("aType").value, inType = ASSETS.filter(a => a.type === t), F = FILTERS[t];
   const keep = $("aCat").value;
   $("aCat").style.display = F ? "" : "none";
+  $("aQ").placeholder = `Search ${t.toLowerCase()}`;
   let list = inType;
   if (F) {
-    const opts = F.options || [...new Set(inType.map(a => a[F.key]))];
     $("aCat").setAttribute("aria-label", F.all);
-    $("aCat").innerHTML = `<option value="">${F.all} (${inType.length})</option>` + opts.map(o => `<option value="${o}">${o} (${inType.filter(a => a[F.key] === o).length})</option>`).join("");
+    let html = `<option value="">${F.all} (${inType.length})</option>`, opts;
+    if (F.grouped) {
+      opts = [...new Set(inType.map(a => a.ckey))];
+      const groups = [...new Set(inType.map(a => a.group))];
+      html += groups.map(g => `<optgroup label="${esc(g)}">` + opts.filter(o => o.split("|")[0] === g).map(o => `<option value="${esc(o)}">${esc(o.split("|")[1])} (${inType.filter(a => a.ckey === o).length})</option>`).join("") + `</optgroup>`).join("");
+    } else {
+      opts = F.options || [...new Set(inType.map(a => a[F.key]))];
+      html += opts.map(o => `<option value="${o}">${o} (${inType.filter(a => a[F.key] === o).length})</option>`).join("");
+    }
+    $("aCat").innerHTML = html;
     if (opts.includes(keep)) $("aCat").value = keep;
     const c = $("aCat").value; list = inType.filter(a => !c || a[F.key] === c);
   }
-  $("aCount").textContent = `${list.length} ${list.length === 1 ? t.toLowerCase().replace(/s$/, "") : t.toLowerCase()}`;
-  $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${a.title}"><img src="${a.thumb}" alt="" draggable="false"${a.set ? ` class="ico ${a.set.toLowerCase()}"` : ""}><span>${a.title}</span></button>`).join("");
+  const q = $("aQ").value.trim();
+  if (q && window.smartSearch) {
+    const items = list.map(a => ({ title: a.title, area: a.cat || a.set || "", keywords: (a.group || "") + " " + a.type, steps: [], ref: a }));
+    const r = smartSearch(q, items), ex = r.filter(x => x.all);
+    list = (ex.length ? ex : r.slice(0, 8)).map(x => x.item.ref);
+  }
+  const noun = list.length === 1 ? t.toLowerCase().replace(/s$/, "") : t.toLowerCase();
+  $("aCount").textContent = `${list.length} ${noun}`;
+  $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${esc(a.title)}"><img src="${a.thumb}" alt="" loading="lazy" draggable="false"${a.set ? ` class="ico ${a.set.toLowerCase()}"` : ""}><span>${esc(a.title)}${a.cat && !$("aCat").value ? `<small>${esc(a.cat)}</small>` : ""}</span></button>`).join("") || `<p class="note">Nothing matches that. Try other words, or choose a different category.</p>`;
   $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
   $("aTip").textContent = TIPS[t] || "";
 }
@@ -304,7 +324,7 @@ async function insertAsset(btn){
     Office.context.document.setSelectedDataAsync(b64, { coercionType: Office.CoercionType.Image }, r => done(r.status === Office.AsyncResultStatus.Succeeded ? "Added." : "Couldn't add it: " + r.error.message));
   } catch(e){ done("Couldn't add it: " + e.message); }
 }
-$("aType").onchange = () => { $("aCat").value = ""; renderAssets(); }; $("aCat").onchange = renderAssets; renderAssets();
+$("aType").onchange = () => { $("aCat").value = ""; $("aQ").value = ""; renderAssets(); }; $("aQ").oninput = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
 
 // fonts
 document.getElementById("fonts").onclick = async () => {
