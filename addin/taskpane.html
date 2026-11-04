@@ -29,7 +29,14 @@ select.fi{appearance:none;-webkit-appearance:none;background-image:url("data:ima
 .back{all:unset;cursor:pointer;color:var(--lime);font-size:13px;margin-bottom:10px;display:inline-block}
 .detail h3{font-weight:400;font-size:20px;line-height:1.2;margin:2px 0 12px}
 .detail .a{font-size:11px;color:var(--lime)}
-video{width:100%;border-radius:10px;display:block;margin-bottom:12px;background:#000}
+.player{position:relative;margin-bottom:12px;border-radius:10px;overflow:hidden;background:#000}
+.player video{width:100%;display:block}
+.player .play{all:unset;cursor:pointer;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(42,67,86,.35);transition:background .2s}
+.player .play:hover{background:rgba(42,67,86,.15)}
+.player .play span{width:58px;height:58px;border-radius:50%;background:var(--lime);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .2s}
+.player .play:hover span{transform:scale(1.08)}
+.player .play svg{margin-left:4px}
+.player.started .play{display:none}
 .soon{background:var(--soft);border-radius:10px;padding:14px;color:var(--muted);font-size:13px;margin-bottom:12px}
 ol{list-style:none;counter-reset:s}
 ol li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px}
@@ -113,8 +120,10 @@ function open(id){
   const t = TOPICS.find(x => x.id === id); if (!t) return;
   $("listView").hidden = true; $("detailView").hidden = false;
   $("detailView").innerHTML = `<button class="back" id="back">‹ All topics</button><div class="a">${t.area}</div><h3>${t.title}</h3>` +
-    (t.video ? `<video controls muted loop playsinline autoplay poster="${t.video.replace(".mp4", ".jpg")}" src="${t.video}"></video>` : `<div class="soon">The animation for this one is coming soon. The steps are below.</div>`) +
+    (t.video ? `<div class="player" id="player"><video muted loop playsinline preload="metadata" poster="${t.video.replace(".mp4", ".jpg")}" src="${t.video}"></video><button class="play" aria-label="Play the video"><span><svg width="22" height="24" viewBox="0 0 22 24"><path d="M2 2 L20 12 L2 22 Z" fill="#324E64"/></svg></span></button></div>` : `<div class="soon">The animation for this one is coming soon. The steps are below.</div>`) +
     `<ol>${t.steps.map(s => `<li>${s}</li>`).join("")}</ol>`;
+  const pl = $("player");
+  if (pl) pl.querySelector(".play").onclick = () => { const v = pl.querySelector("video"); v.controls = true; pl.classList.add("started"); v.play().catch(()=>{}); track("play-video", id); };
   $("back").onclick = () => { const v = $("detailView").querySelector("video"); if (v) v.pause(); $("detailView").hidden = true; $("listView").hidden = false; };
   track("open-topic", id);
 }
