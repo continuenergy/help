@@ -99,6 +99,17 @@ header .brand{display:flex;align-items:center;gap:10px}
 .gbody small{font-size:12.5px;color:var(--muted);margin-top:3px}
 .gbtn{align-self:flex-start;margin-top:10px;background:var(--field);border-radius:16px;padding:6px 14px;font-size:13px;font-weight:500}
 .acard{border-radius:22px}
+body{font-size:15px}
+.fi{font-size:15px;padding:10px 13px}
+.count{font-size:13.5px}
+.back{font-size:14.5px}
+.tabs button{font-size:14px}
+.acard b{font-size:16.5px}.acard small{font-size:13.5px}
+.gbody b{font-size:16.5px}.gbody small{font-size:13.5px}.gbtn{font-size:14px}
+.detail h3,.ahead h3{font-size:22px}
+ol li{font-size:15px}
+.card h4{font-size:16.5px}.card p,label.chk,.soon,.out{font-size:14px}label.l{font-size:13px}
+.note{font-size:13px}.asset span{font-size:13px}
 </style>
 </head>
 <body>
@@ -108,6 +119,7 @@ header .brand{display:flex;align-items:center;gap:10px}
 
 <section class="pane" id="help">
   <div id="listView">
+    <select class="fi" id="area" aria-label="Choose a topic"></select>
     <input class="fi" id="q" type="search" placeholder="Search all help" aria-label="Search help">
     <div id="areaHead"></div>
     <p class="count" id="count"></p>
@@ -177,12 +189,15 @@ const ICONS = {
 const icon = a => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[a] || '<circle cx="12" cy="12" r="8"/>'}</svg>`;
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 let curArea = "";
+function fillArea(){ $("area").innerHTML = `<option value="">All topics (${TOPICS.length} guides)</option>` + areas.map(a => `<option value="${a}">${a} (${TOPICS.filter(t => t.area === a).length})</option>`).join(""); }
+fillArea();
 const rowHtml = (t, showArea) => `<button class="gcard" data-id="${t.id}"><span class="gimg">${t.video ? `<img src="${t.video.replace(".mp4", ".jpg")}" alt="" loading="lazy"><span class="gplay"><svg width="12" height="13" viewBox="0 0 22 24"><path d="M2 2 L20 12 L2 22 Z" fill="currentColor"/></svg></span>` : `<span class="gph">${icon(t.area)}</span>`}</span><span class="gbody"><b>${t.title}</b><small>${showArea ? t.area + " · " : ""}${plural(t.steps.length, "step")}</small><span class="gbtn">${t.video ? "Watch video" : "See steps"}</span></span></button>`;
 function render(){
   const f = $("q").value.trim().toLowerCase();
+  $("area").value = curArea; $("q").placeholder = curArea ? `Search ${curArea}` : "Search all help";
   $("cards").innerHTML = ""; $("list").innerHTML = ""; $("areaHead").innerHTML = "";
   if (f) {
-    const list = TOPICS.filter(t => (t.title + " " + t.area + " " + t.keywords + " " + t.steps.join(" ")).toLowerCase().includes(f));
+    const list = TOPICS.filter(t => (!curArea || t.area === curArea) && (t.title + " " + t.area + " " + t.keywords + " " + t.steps.join(" ")).toLowerCase().includes(f));
     $("count").textContent = list.length ? `${plural(list.length, "guide")} found` : "";
     $("list").innerHTML = list.map(t => rowHtml(t, true)).join("") || `<p class="note">Nothing matches that yet. Try other words, or the full help site.</p>`;
   } else if (curArea) {
@@ -210,7 +225,7 @@ function open(id){
   $("back").onclick = () => { const v = $("detailView").querySelector("video"); if (v) v.pause(); $("detailView").hidden = true; $("listView").hidden = false; };
   track("open-topic", id);
 }
-$("q").oninput = render; render();
+$("q").oninput = render; $("area").onchange = () => { curArea = $("area").value; $("q").value = ""; render(); if (curArea) track("open-area", curArea); }; render();
 
 // brand assets: images now; videos and icons can be added to the same list later
 const ASSETS = [
