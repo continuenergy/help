@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Continu Studio</title>
 <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<script src="search.js"></script>
 <script>
 (function(){var t=null;try{t=localStorage.getItem('continuStudioTheme')}catch(e){}
 if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','light');window.__themeStored=!!t})();
@@ -197,9 +198,13 @@ function render(){
   $("area").value = curArea; $("q").placeholder = curArea ? `Search ${curArea}` : "Search all help";
   $("cards").innerHTML = ""; $("list").innerHTML = ""; $("areaHead").innerHTML = "";
   if (f) {
-    const list = TOPICS.filter(t => (!curArea || t.area === curArea) && (t.title + " " + t.area + " " + t.keywords + " " + t.steps.join(" ")).toLowerCase().includes(f));
-    $("count").textContent = list.length ? `${plural(list.length, "guide")} found` : "";
-    $("list").innerHTML = list.map(t => rowHtml(t, true)).join("") || `<p class="note">Nothing matches that yet. Try other words, or the full help site.</p>`;
+    const pool = TOPICS.filter(t => !curArea || t.area === curArea);
+    const ranked = window.smartSearch ? smartSearch(f, pool) : [];
+    const exact = ranked.filter(r => r.all), close = exact.length ? [] : ranked.slice(0, 4);
+    const list = (exact.length ? exact : close).map(r => r.item);
+    $("count").textContent = exact.length ? `${plural(exact.length, "guide")} found` : close.length ? "No exact match. These look closest:" : "";
+    $("list").innerHTML = list.map(t => rowHtml(t, true)).join("") || `<p class="note">Nothing matches that yet. Try other words${curArea ? ", or choose All topics" : ""}, or the full help site.</p>`;
+    clearTimeout(window.__qt); window.__qt = setTimeout(() => track("search", f + " → " + (list[0] ? list[0].id : "none")), 1200);
   } else if (curArea) {
     const list = TOPICS.filter(t => t.area === curArea), vids = list.filter(t => t.video).length;
     $("areaHead").innerHTML = `<button class="back" id="toAreas">‹ All topics</button><div class="ahead"><h3>${curArea}</h3></div>`;
