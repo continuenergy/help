@@ -172,6 +172,14 @@ header{margin-bottom:16px}
 .ft small{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.35}
 .soon-row{opacity:.55;cursor:default}
 .soon-row:hover{background:none}
+.crow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}
+.crow .count{margin:0 2px}
+.swapbtn{all:unset;cursor:pointer;font-size:14px;font-weight:500;padding:7px 14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);color:var(--ink);white-space:nowrap}
+.swapbtn:hover{outline:2px solid var(--accent)}
+.swapbtn.on{background:var(--accent);color:#2A4356;border-color:transparent}
+.swaphint{font-size:14px;line-height:1.45;background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:12px 14px;margin:0 0 16px}
+#toast{position:fixed;left:12px;right:12px;bottom:12px;z-index:20;background:#2A4356;color:#fff;border-radius:16px;padding:12px 16px;font-size:14px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
+#toast.show{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -223,7 +231,8 @@ header{margin-bottom:16px}
   <select class="fi" id="aType"></select>
   <select class="fi" id="aCat" aria-label="Category"></select>
   <input class="fi" id="aQ" type="search" placeholder="Search images" aria-label="Search brand assets">
-  <p class="count" id="aCount"></p>
+  <div class="crow"><p class="count" id="aCount"></p><button class="swapbtn" id="swapMode" aria-pressed="false" hidden>Image swap: off</button></div>
+  <p class="swaphint" id="swapHint" hidden>Swap is on. On your slide, click the one picture you want to change, then choose its replacement here.</p>
   <div class="grid" id="aGrid"></div>
   <p class="note" id="aTip"></p>
   <div class="out" id="aOut"></div>
@@ -318,7 +327,7 @@ $("q").oninput = render; $("area").onchange = () => { curArea = $("area").value;
 // brand assets: images now; videos and icons can be added to the same list later
 const ASSETS = window.ASSETS || [];
 const TIPS = {
-  Images: "Tip: click an empty picture box first, then choose an image. To change a picture that's already on the slide, select it first and its shape and size are kept.",
+  Images: "Tip: click an empty picture box first, then choose an image. To change a picture that's already on the slide, turn on Image swap.",
   Videos: "Click a video to add it as its own slide, straight after the one you're on. It doesn't matter what's selected.",
   Icons: "Icons are added to your slide as graphics you can resize. Choose the white set for dark backgrounds."
 };
@@ -361,13 +370,14 @@ function renderAssets(){
   $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${esc(a.title)}"><img src="${a.thumb}" alt="" loading="lazy" draggable="false"${a.set ? ` class="ico ${a.set.toLowerCase()}"` : ""}><span>${esc(a.title)}${a.cat && !$("aCat").value ? `<small>${esc(a.cat)}</small>` : ""}</span></button>`).join("") || `<p class="note">Nothing matches that. Try other words, or choose a different category.</p>`;
   $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
   $("aTip").textContent = TIPS[t] || "";
+  $("swapMode").hidden = t !== "Images"; if (t !== "Images" && SWAP) setSwap(false);
 }
 async function insertAsset(btn){
   const a = ASSETS.find(x => x.id === btn.dataset.id); const out = $("aOut");
   track("insert-asset", a.id);
   if (!window.Office || !Office.context || !Office.context.document){ out.textContent = "Open this inside PowerPoint to use it."; return; }
   btn.classList.add("busy"); out.textContent = "Adding…";
-  const done = msg => { btn.classList.remove("busy"); out.textContent = msg; };
+  const done = msg => { btn.classList.remove("busy"); out.textContent = msg; toast(msg); };
   try {
     const res = await fetch(a.file);
     if (a.kind === "svg"){
@@ -390,32 +400,35 @@ async function insertAsset(btn){
       return;
     }
     // a picture already on the slide is selected: swap it and keep its shape
-    if (a.kind === "image" && ready() && window.swapPictureInSlide) {
-      try { if (await swapSelectedPicture(a, b64)) { done("Swapped. The picture keeps its size, position and shape."); track("swap-image", a.id); return; } }
-      catch(e) { done("Couldn't swap it: " + e.message); return; }
+    if (a.kind === "image" && SWAP) {
+      if (!ready()) { done("Open this inside PowerPoint to use it."); return; }
+      try { await swapSelectedPicture(a, b64); done("Swapped. The picture kept its size, position and shape."); track("swap-image", a.id); }
+      catch(e) { done(e.message); track("swap-fail", e.message.slice(0, 80)); }
+      return;
     }
     Office.context.document.setSelectedDataAsync(b64, { coercionType: Office.CoercionType.Image }, r => done(r.status === Office.AsyncResultStatus.Succeeded ? "Added." : "Couldn't add it: " + r.error.message));
   } catch(e){ done("Couldn't add it: " + e.message); }
 }
 
-// returns true if a selected picture was swapped, false if there was nothing to swap
+// swaps the one selected picture; throws a plain-English reason if it can't
 async function swapSelectedPicture(a, b64){
+  const req = Office.context.requirements;
+  if (!req.isSetSupported("PowerPointApi", "1.8")) throw new Error("This version of PowerPoint can't swap pictures from the panel yet. Updating Microsoft 365 should fix it.");
   let info = null;
   await PowerPoint.run(async ctx => {
     const shapes = ctx.presentation.getSelectedShapes(); shapes.load("items/id,items/name,items/type,items/width,items/height");
     const slides = ctx.presentation.getSelectedSlides(); slides.load("items/id");
     await ctx.sync();
-    if (shapes.items.length !== 1 || slides.items.length !== 1) return;
+    if (!shapes.items.length) throw new Error("Nothing is selected. Click the picture on your slide first, then choose the new image.");
+    if (shapes.items.length > 1) throw new Error("More than one thing is selected. Click just the one picture you want to change.");
     const sh = shapes.items[0];
-    if (!/image|placeholder|picture/i.test(sh.type)) return;
     const ex = slides.items[0].exportAsBase64(); await ctx.sync();
-    info = { slideId: slides.items[0].id, shape: { id: sh.id, name: sh.name }, frame: { w: sh.width * 12700, h: sh.height * 12700 }, b64: ex.value };
+    info = { slideId: slides.items[0].id, shape: { id: sh.id, name: sh.name, type: sh.type }, frame: { w: sh.width * 12700, h: sh.height * 12700 }, b64: ex.value };
   });
-  if (!info) return false;
   const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
   const bmp = await createImageBitmap(new Blob([bytes]));
   const out = await swapPictureInSlide(info.b64, info.shape, { bytes, ext: /\.png$/i.test(a.file) ? "png" : "jpg", w: bmp.width, h: bmp.height }, info.frame);
-  if (!out) return false; // e.g. an empty placeholder: fill it the normal way
+  if (!out) throw new Error(`The selected item ("${info.shape.name}", ${info.shape.type}) isn't a picture I can swap. If it's an empty picture box, turn Image swap off and click an image to fill it.`);
   await PowerPoint.run(async ctx => {
     ctx.presentation.insertSlidesFromBase64(out, { formatting: "UseDestinationTheme", targetSlideId: info.slideId });
     await ctx.sync();
@@ -425,9 +438,13 @@ async function swapSelectedPicture(a, b64){
     all.items[i].delete(); await ctx.sync();
     try { ctx.presentation.setSelectedSlides([fresh.id]); await ctx.sync(); } catch(e) {}
   });
-  return true;
 }
+let SWAP = false;
+function setSwap(on){ SWAP = on; const b = $("swapMode"); b.setAttribute("aria-pressed", on); b.textContent = on ? "Image swap: on" : "Image swap: off"; b.classList.toggle("on", on); $("swapHint").hidden = !on; }
+$("swapMode").onclick = () => { setSwap(!SWAP); track("swap-mode", SWAP ? "on" : "off"); };
 
+function toast(msg){ let t = document.getElementById("toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), msg.length > 60 ? 7000 : 3500); }
 // ---------- Formatting ----------
 async function onText(fn){
   await PowerPoint.run(async ctx => {
@@ -456,7 +473,7 @@ document.querySelectorAll(".frow").forEach(b => b.onclick = async () => {
   if (k === "swap") { document.querySelector('.tabs button[data-p=brand]').click(); return; }
   if (k === "crop") { document.querySelector('.tabs button[data-p=help]').click(); open("crop-image"); return; }
   if (!ready()) { out.textContent = "Open this inside PowerPoint to use it."; return; }
-  try { await onText(FORMATS[k]); out.textContent = "Done."; } catch(e) { out.textContent = e.message.startsWith("Select") ? e.message : "Couldn't do that here: " + e.message; }
+  try { await onText(FORMATS[k]); out.textContent = "Done."; toast("Done."); } catch(e) { out.textContent = e.message.startsWith("Select") ? e.message : "Couldn't do that here: " + e.message; toast(out.textContent); }
 });
 $("aType").onchange = () => { $("aCat").value = ""; $("aQ").value = ""; renderAssets(); }; $("aQ").oninput = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
 
