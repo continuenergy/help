@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Continu Help</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+:root{--navy:#324E64;--navy2:#2A4356;--lime:#B5EB03;--ink:#FFFFFF;--soft:#3B5A72;--muted:#C2D0DA}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--ink);font-family:Effra,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45;padding:16px 16px 28px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+header img{width:28px;height:28px}
+header b{font-weight:500;font-size:17px}
+input{width:100%;border:0;border-radius:20px;padding:10px 14px;font:inherit;background:var(--soft);color:var(--ink);margin-bottom:14px}
+input::placeholder{color:var(--muted)}
+.topic{background:var(--soft);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.topic button.head{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 14px;box-sizing:border-box}
+.topic .area{font-size:11px;color:var(--lime);display:block}
+.topic .name{font-size:15px}
+.topic .chev{color:var(--lime);font-size:18px;transition:transform .2s}
+.topic.open .chev{transform:rotate(90deg)}
+.body{display:none;padding:0 14px 14px}
+.topic.open .body{display:block}
+video{width:100%;border-radius:10px;display:block;margin-bottom:10px;background:#000}
+ol{padding-left:0;list-style:none;counter-reset:s}
+ol li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:6px}
+ol li:before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:50%;background:var(--lime);color:var(--navy);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+h2{font-weight:500;font-size:13px;color:var(--lime);margin:22px 0 8px}
+.tool{background:var(--soft);border-radius:14px;padding:14px;margin-bottom:10px}
+.tool p{color:var(--muted);font-size:13px;margin-bottom:10px}
+.btn{all:unset;cursor:pointer;background:var(--lime);color:var(--navy);font-weight:600;border-radius:18px;padding:8px 14px;font-size:13px}
+.out{margin-top:10px;font-size:13px;white-space:pre-line}
+.note{color:var(--muted);font-size:12px;margin-top:18px}
+a{color:var(--lime)}
+</style>
+</head>
+<body>
+<header><img src="icon-64.png" alt=""><b>Continu Help</b></header>
+<input id="q" type="search" placeholder="What do you need help with?" aria-label="Search help">
+<div id="list"></div>
+
+<h2>Check this slide</h2>
+<div class="tool">
+  <p>Lists any text on the selected slide that isn't in the Continu font.</p>
+  <button class="btn" id="fonts">Check fonts</button>
+  <div class="out" id="fontsOut"></div>
+</div>
+<div class="tool">
+  <p>Test only: adds a small note to the selected slide, to prove the add-in can change it. Delete it afterwards.</p>
+  <button class="btn" id="note">Add a test note</button>
+  <div class="out" id="noteOut"></div>
+</div>
+<p class="note">Full help: <a href="https://continuenergy.github.io/help/" target="_blank" rel="noopener">continuenergy.github.io/help</a></p>
+
+<script>
+const TOPICS = [
+ {id:"crop-image", area:"Images", title:"Crop an image", video:"crop-image.mp4", keywords:"trim cut picture photo",
+  steps:["Click the picture","Open the Picture Format tab","Click Crop (in the Size group)","Drag the picture or its corners to reposition it","Click Crop again, or press Esc, to finish"]},
+ {id:"link-text", area:"Links", title:"Hyperlink text", video:"link-text.mp4", keywords:"link url website hyperlink",
+  steps:["Select the text you want to link","Right-click and choose Link (or Ctrl+K)","Type or paste the web address, then click OK","Click away – the text is now a link"]},
+ {id:"drag-picture", area:"Images", title:"Drag a picture in from a folder", video:"drag-picture.mp4", keywords:"drop finder explorer replace image photo",
+  steps:["Open the folder in File Explorer next to PowerPoint","Drag the picture onto the empty picture box on the slide","Let go – it drops into the frame"]}
+];
+
+// Usage tracking hook: does nothing until an analytics service is connected.
+function track(event, detail){ try{ if (window.continuTrack) window.continuTrack(event, detail); }catch(e){} }
+
+const list = document.getElementById("list");
+function render(){
+  const f = document.getElementById("q").value.trim().toLowerCase();
+  list.innerHTML = TOPICS.filter(t => !f || (t.title+" "+t.area+" "+t.keywords+" "+t.steps.join(" ")).toLowerCase().includes(f)).map(t => `
+   <div class="topic" data-id="${t.id}">
+     <button class="head"><span><span class="area">${t.area}</span><span class="name">${t.title}</span></span><span class="chev">›</span></button>
+     <div class="body"><video muted loop playsinline preload="none" poster="${t.video.replace(".mp4",".jpg")}" src="${t.video}"></video><ol>${t.steps.map(s=>`<li>${s}</li>`).join("")}</ol></div>
+   </div>`).join("") || `<p class="note">No topic matches that yet. Try the full help site below.</p>`;
+  list.querySelectorAll(".topic").forEach(el => el.querySelector(".head").onclick = () => {
+    const open = !el.classList.contains("open");
+    list.querySelectorAll(".topic").forEach(o => { o.classList.remove("open"); o.querySelector("video").pause(); });
+    if (open){ el.classList.add("open"); const v = el.querySelector("video"); v.currentTime = 0; v.play().catch(()=>{}); track("open-topic", el.dataset.id); }
+  });
+}
+document.getElementById("q").oninput = render;
+render();
+
+function ready(){ return typeof PowerPoint !== "undefined"; }
+
+document.getElementById("fonts").onclick = async () => {
+  const out = document.getElementById("fontsOut"); out.textContent = "Checking…"; track("check-fonts");
+  if (!ready()){ out.textContent = "Open this inside PowerPoint to use it."; return; }
+  try {
+    await PowerPoint.run(async ctx => {
+      const sel = ctx.presentation.getSelectedSlides(); sel.load("items"); await ctx.sync();
+      if (!sel.items.length){ out.textContent = "Select a slide first."; return; }
+      const shapes = sel.items[0].shapes; shapes.load("items/name"); await ctx.sync();
+      const off = [], ok = [];
+      for (const s of shapes.items){
+        try {
+          const tr = s.textFrame.textRange; tr.load("text,font/name"); await ctx.sync();
+          if (!tr.text || !tr.text.trim()) continue;
+          const font = tr.font.name;
+          if (font && !/effra/i.test(font)) off.push(`${s.name}: ${font}`); else ok.push(s.name);
+        } catch(e) { /* not a text shape */ }
+      }
+      out.textContent = off.length ? "Not in the Continu font:\n" + off.join("\n") : `All ${ok.length} text boxes use the Continu font.`;
+    });
+  } catch(e){ out.textContent = "Couldn't check this slide: " + e.message; }
+};
+
+document.getElementById("note").onclick = async () => {
+  const out = document.getElementById("noteOut"); track("test-note");
+  if (!ready()){ out.textContent = "Open this inside PowerPoint to use it."; return; }
+  try {
+    await PowerPoint.run(async ctx => {
+      const sel = ctx.presentation.getSelectedSlides(); sel.load("items"); await ctx.sync();
+      if (!sel.items.length){ out.textContent = "Select a slide first."; return; }
+      const tb = sel.items[0].shapes.addTextBox("Added by the Continu Help add-in", {left: 40, top: 40, width: 320, height: 40});
+      tb.name = "Continu Help test note";
+      await ctx.sync();
+      out.textContent = "Added. Delete it whenever you like.";
+    });
+  } catch(e){ out.textContent = "Couldn't add the note: " + e.message; }
+};
+
+if (window.Office) Office.onReady(() => {});
+</script>
+</body>
+</html>
