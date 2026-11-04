@@ -51,7 +51,7 @@ ol li:before{content:counter(s);position:absolute;left:0;top:1px;width:20px;heig
 .card{background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px}
 .card h4{font-weight:500;font-size:15px;margin-bottom:4px}
 .card p{color:var(--muted);font-size:13px;margin-bottom:12px}
-.card .fi{background:var(--field)}
+.card .fi{background-color:var(--field)}
 label.l{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
 label.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:2px 0 14px;cursor:pointer}
 label.chk input{width:16px;height:16px;margin-top:2px;flex:0 0 16px;accent-color:#B5EB03}
@@ -124,6 +124,13 @@ ol li{font-size:15px}
 .asset img{background:var(--field)}
 .grid{align-items:start}
 .fi:focus{outline:2px solid var(--accent);outline-offset:0}
+.pane .card h4{font-size:18px;font-weight:500}
+.pane .card p{font-size:15px;line-height:1.45}
+.pane label.l{font-size:14px}
+.pane label.chk{font-size:15px}
+.pane .btn{font-size:15px}
+.pane .card .soon{display:inline-block;padding:6px 14px;border-radius:16px;background:var(--field);margin:4px 0 0;font-size:14px}
+label.al{display:block;font-size:14px;color:var(--muted);margin:0 2px 6px}
 </style>
 </head>
 <body>
@@ -145,7 +152,8 @@ ol li{font-size:15px}
 </section>
 
 <section class="pane" id="brand">
-  <select class="fi" id="aType" aria-label="Asset type"></select>
+  <label class="al" for="aType">Asset library type</label>
+  <select class="fi" id="aType"></select>
   <select class="fi" id="aCat" aria-label="Category"></select>
   <input class="fi" id="aQ" type="search" placeholder="Search images" aria-label="Search brand assets">
   <p class="count" id="aCount"></p>
@@ -156,23 +164,22 @@ ol li{font-size:15px}
 
 <section class="pane on" id="decks">
   <div class="card">
-    <h4>Build a deck</h4>
-    <p>Copies the right slides from the library to the top of this deck, in order.</p>
-    <label class="l" for="bType">Deck</label>
+    <h4>Build a presentation</h4>
+    <p>Choose the type of presentation and who it's for. The right slides are copied from the library to the start of this file, in the right order. The library itself stays as it is.</p>
+    <label class="l" for="bType">Presentation type</label>
     <select class="fi" id="bType"><option value="energy-user">Sales proposal (32 slides)</option></select>
-    <label class="l" for="bCompany">Company</label>
-    <input class="fi" id="bCompany" placeholder="Company name">
-    <label class="l" for="bPresenter">Presenter</label>
-    <select class="fi" id="bPresenter"><option>Alison McFadden</option><option>Gavin</option><option>Someone else</option></select>
+    <label class="l" for="bCompany">Prospect/Client Company Name</label>
+    <input class="fi" id="bCompany" placeholder="Type the company name">
+    <label class="l" for="bPresenter">Who's presenting this?</label>
+    <select class="fi" id="bPresenter"><option value="" disabled selected>Choose a presenter</option><option>Alison McFadden</option><option>Adam Holland</option><option>Glenn Townsley</option><option>Michelle Mallon</option><option>Tom Hall</option><option>Brian Treanor</option><option>Kerry-Anne M.</option><option>Chris Walker</option><option>Leon Clarke</option></select>
     <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
-    <button class="btn" id="build">Build deck</button>
+    <button class="btn" id="build">Build presentation</button>
     <div class="out" id="buildOut"></div>
   </div>
   <div class="card">
-    <h4>Check fonts</h4>
-    <p>Lists any text on the selected slide that isn't in the Continu font.</p>
-    <button class="btn" id="fonts">Check fonts</button>
-    <div class="out" id="fontsOut"></div>
+    <h4>Build a slide flow</h4>
+    <p>Pick individual slides from the library, grouped by type, and add them to your presentation one at a time.</p>
+    <span class="soon">Coming soon</span>
   </div>
 </section>
 
@@ -327,27 +334,6 @@ async function insertAsset(btn){
 $("aType").onchange = () => { $("aCat").value = ""; $("aQ").value = ""; renderAssets(); }; $("aQ").oninput = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
 
 // fonts
-document.getElementById("fonts").onclick = async () => {
-  const out = document.getElementById("fontsOut"); out.textContent = "Checking…"; track("check-fonts");
-  if (!ready()){ out.textContent = "Open this inside PowerPoint to use it."; return; }
-  try {
-    await PowerPoint.run(async ctx => {
-      const sel = ctx.presentation.getSelectedSlides(); sel.load("items"); await ctx.sync();
-      if (!sel.items.length){ out.textContent = "Select a slide first."; return; }
-      const shapes = sel.items[0].shapes; shapes.load("items/name"); await ctx.sync();
-      const off = [], ok = [];
-      for (const s of shapes.items){
-        try {
-          const tr = s.textFrame.textRange; tr.load("text,font/name"); await ctx.sync();
-          if (!tr.text || !tr.text.trim()) continue;
-          const font = tr.font.name;
-          if (font && !/effra/i.test(font)) off.push(`${s.name}: ${font}`); else ok.push(s.name);
-        } catch(e) { /* not a text shape */ }
-      }
-      out.textContent = off.length ? "Not in the Continu font:\n" + off.join("\n") : `All ${ok.length} text boxes use the Continu font.`;
-    });
-  } catch(e){ out.textContent = "Couldn't check this slide: " + e.message; }
-};
 
 
 // ---------- Build a deck (test) ----------
@@ -356,6 +342,7 @@ function say(t){ document.getElementById("buildOut").textContent = t; }
 document.getElementById("build").onclick = async () => {
   const company = document.getElementById("bCompany").value.trim() || "Company name";
   const presenter = document.getElementById("bPresenter").value;
+  if (!presenter) { document.getElementById("buildOut").textContent = "Choose who's presenting first."; return; }
   const call = document.getElementById("bCall").checked;
   const RECIPE = document.getElementById("bType").value; track("build-deck", RECIPE);
   if (!ready()){ say("Open this inside PowerPoint to use it."); return; }
