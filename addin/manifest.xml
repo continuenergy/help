@@ -5,13 +5,13 @@
            xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
            xsi:type="TaskPaneApp">
   <Id>f525dd73-cc2e-4a64-ab05-7db98d785b59</Id>
-  <Version>1.2.0.0</Version>
+  <Version>1.3.0.0</Version>
   <ProviderName>Ideer Creative</ProviderName>
   <DefaultLocale>en-GB</DefaultLocale>
   <DisplayName DefaultValue="Continu Studio"/>
   <Description DefaultValue="Build Continu decks, add brand assets and get how-to help, inside PowerPoint."/>
-  <IconUrl DefaultValue="https://continuenergy.github.io/help/addin/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://continuenergy.github.io/help/addin/icon-64.png"/>
+  <IconUrl DefaultValue="https://continuenergy.github.io/help/addin/ring-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://continuenergy.github.io/help/addin/ring-64.png"/>
   <SupportUrl DefaultValue="https://continuenergy.github.io/help/"/>
   <AppDomains>
     <AppDomain>https://continuenergy.github.io</AppDomain>
@@ -67,9 +67,9 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16" DefaultValue="https://continuenergy.github.io/help/addin/icon-16.png"/>
-        <bt:Image id="Icon.32" DefaultValue="https://continuenergy.github.io/help/addin/icon-32.png"/>
-        <bt:Image id="Icon.80" DefaultValue="https://continuenergy.github.io/help/addin/icon-80.png"/>
+        <bt:Image id="Icon.16" DefaultValue="https://continuenergy.github.io/help/addin/ring-16.png"/>
+        <bt:Image id="Icon.32" DefaultValue="https://continuenergy.github.io/help/addin/ring-32.png"/>
+        <bt:Image id="Icon.80" DefaultValue="https://continuenergy.github.io/help/addin/ring-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://continuenergy.github.io/help/addin/commands.html"/>
