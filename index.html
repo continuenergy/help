@@ -103,6 +103,8 @@ body.dark .progress i{background:var(--green)}
 .arw svg{stroke:var(--ink)}.arw:hover:not(:disabled) svg{stroke:#2A4356}
 .empty{padding:20px 0;color:var(--muted);display:none}
 footer{padding-top:40px;padding-bottom:36px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+footer a:hover{color:var(--ink)}
 /* mobile menu */
 .drawer{position:fixed;inset:0;z-index:20;display:none}
 .drawer.on{display:block}
@@ -188,7 +190,7 @@ body.dark .tip{background:var(--soft2)}
     <p class="soon" id="soon">Word help is coming soon.</p>
   </main>
 </div>
-<footer class="pad"><span>Continu Help · PowerPoint and Word</span><span>Each animation loops – watch it as many times as you like.</span></footer>
+<footer class="pad"><span>© <span id="yr">2026</span> Continu. All rights reserved.</span><span>Designed and built by <a href="https://ideercreative.com" target="_blank" rel="noopener">Ideer Creative</a></span></footer>
 </div>
 
 <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Help topics"><div class="shade" id="shade"></div><div class="sheet">
@@ -201,6 +203,7 @@ body.dark .tip{background:var(--soft2)}
   <div class="text"><button class="close" id="close" aria-label="Close">✕</button><span class="badge" id="vbadge"></span><h3 id="title"></h3><ol id="steps"></ol><div class="tip" id="tip"></div></div>
 </div></div>
 <script>
+document.getElementById("yr").textContent = new Date().getFullYear();
 // ---- Topics. Add one entry per how-to. id = link anchor (…/help.html#crop-image).
 // media = file name (no extension) of the GIF + JPG in assets/GIFs/. Demo topics reuse two recordings for now.
 const DIR = "assets/GIFs/";
