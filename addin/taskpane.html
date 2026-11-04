@@ -425,14 +425,16 @@ function renderAssets(){
     if (F.grouped) {
       opts = [...new Set(inType.map(a => a.ckey))];
       const groups = [...new Set(inType.map(a => a.group))];
-      html += groups.map(g => `<optgroup label="${esc(g)}">` + opts.filter(o => o.split("|")[0] === g).map(o => `<option value="${esc(o)}">${esc(o.split("|")[1])} (${inType.filter(a => a.ckey === o).length})</option>`).join("") + `</optgroup>`).join("");
+      const IND = "\u2003\u2002";
+      html += groups.map(g => `<option value="${esc("group:" + g)}">${esc(g)} (${inType.filter(a => a.group === g).length})</option>` + opts.filter(o => o.split("|")[0] === g).map(o => `<option value="${esc(o)}">${IND}${esc(o.split("|")[1])} (${inType.filter(a => a.ckey === o).length})</option>`).join("")).join("");
+      opts = opts.concat(groups.map(g => "group:" + g));
     } else {
       opts = F.options || [...new Set(inType.map(a => a[F.key]))];
       html += opts.map(o => `<option value="${o}">${o} (${inType.filter(a => a[F.key] === o).length})</option>`).join("");
     }
     $("aCat").innerHTML = html;
     if (opts.includes(keep)) $("aCat").value = keep;
-    const c = $("aCat").value; list = inType.filter(a => !c || a[F.key] === c);
+    const c = $("aCat").value; list = inType.filter(a => !c || (c.startsWith("group:") ? a.group === c.slice(6) : a[F.key] === c));
   }
   const q = $("aQ").value.trim();
   if (q && window.smartSearch) {
@@ -442,7 +444,7 @@ function renderAssets(){
   }
   const noun = list.length === 1 ? t.toLowerCase().replace(/s$/, "") : t.toLowerCase();
   $("aCount").textContent = `${list.length} ${noun}`;
-  $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${esc(a.title)}"><img src="${a.thumb}" alt="" loading="lazy" draggable="false"${a.set ? ` class="ico ${a.set.toLowerCase()}"` : ""}><span>${esc(a.title)}${a.cat && !$("aCat").value ? `<small>${esc(a.cat)}</small>` : ""}</span></button>`).join("") || `<p class="note">Nothing matches that. Try other words, or choose a different category.</p>`;
+  $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${esc(a.title)}"><img src="${a.thumb}" alt="" loading="lazy" draggable="false"${a.set ? ` class="ico ${a.set.toLowerCase()}"` : ""}><span>${esc(a.title)}${a.cat && (!$("aCat").value || $("aCat").value.startsWith("group:")) ? `<small>${esc(a.cat)}</small>` : ""}</span></button>`).join("") || `<p class="note">Nothing matches that. Try other words, or choose a different category.</p>`;
   $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
   $("aTip").textContent = TIPS[t] || "";
   $("swapWrap").hidden = t !== "Images"; $("layerRow").hidden = t !== "Images"; $("iconNote").hidden = t !== "Icons"; if (t !== "Images" && SWAP) setSwap(false);
