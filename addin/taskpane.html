@@ -8,7 +8,7 @@
 <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 <script>
 (function(){var t=null;try{t=localStorage.getItem('continuStudioTheme')}catch(e){}
-if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','dark');window.__themeStored=!!t})();
+if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','light');window.__themeStored=!!t})();
 </script>
 <style>
 :root{--bg:#324E64;--bg2:#2A4356;--surface:#3B5A72;--field:#2A4356;--ink:#FFFFFF;--muted:#C2D0DA;--accent:#B5EB03;--onAccent:#324E64;--accentText:#B5EB03;--line:transparent;--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23B5EB03' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
@@ -306,7 +306,7 @@ document.getElementById("build").onclick = async () => {
 
 
 
-// Theme: stored choice, else follow PowerPoint, else dark
+// Theme: stored choice, else light
 function setTheme(t, save){document.documentElement.setAttribute('data-theme',t);
   if(save){try{localStorage.setItem('continuStudioTheme',t)}catch(e){} try{track('theme',t)}catch(e){}}}
 document.getElementById('mode').addEventListener('click',()=>{
@@ -319,7 +319,7 @@ function followOffice(){ if(window.__themeStored)return;
     const h=th.bodyBackgroundColor.replace('#',''); const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
     const lum=(0.299*((n>>16)&255)+0.587*((n>>8)&255)+0.114*(n&255));
     setTheme(lum>140?'light':'dark',false)}catch(e){}}
-if (window.Office) Office.onReady(() => {followOffice();});
+if (window.Office) Office.onReady(() => {});
 </script>
 </body>
 </html>
