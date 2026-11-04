@@ -210,6 +210,11 @@ header .brand .hlogo{height:48px;width:auto;display:block;color:var(--ink)}
 .skrow{display:flex;align-items:center;gap:12px;padding:14px 12px}
 .skrow+.skrow{border-top:1px solid var(--line)}
 .skrow .ft{flex:1}
+.acards{gap:12px;margin-bottom:20px}
+.acard{padding:18px;min-height:128px;gap:14px}
+.acard:hover{outline:2px solid var(--accent)}
+.acard .ic{width:40px;height:40px}
+.acards:empty{display:none}
 </style>
 </head>
 <body>
@@ -352,11 +357,17 @@ function render(){
     $("count").textContent = exact.length ? `${plural(exact.length, "guide")} found` : close.length ? "No exact match. These look closest:" : "";
     $("list").innerHTML = list.map(t => rowHtml(t, true)).join("") || `<p class="note">Nothing matches that yet. Try other words${curArea ? ", or choose All topics" : ""}, or the full help site.</p>`;
     clearTimeout(window.__qt); window.__qt = setTimeout(() => track("search", f + " → " + (list[0] ? list[0].id : "none")), 1200);
+  } else if (curArea) {
+    const list = TOPICS.filter(t => t.area === curArea), vids = list.filter(t => t.video).length;
+    $("areaHead").innerHTML = `<button class="back" id="toAreas">‹ All topics</button><div class="thead"><h3>${curArea}</h3></div>`;
+    $("count").textContent = `${plural(list.length, "guide")}${vids ? `, ${vids} with video` : ""}`;
+    $("list").innerHTML = list.map(t => rowHtml(t, false)).join("");
+    $("toAreas").onclick = () => { curArea = ""; render(); scrollTo(0, 0); };
   } else {
-    const show = curArea ? [curArea] : areas;
-    $("count").textContent = curArea ? "" : `${TOPICS.length} guides in ${areas.length} topics`;
-    $("list").innerHTML = show.map(a => { const list = TOPICS.filter(t => t.area === a), vids = list.filter(t => t.video).length;
-      return `<div class="tsec"><div class="thead"><h3>${a}</h3><span class="ic">${icon(a)}</span></div><p class="tcount">${plural(list.length, "guide")}${vids ? `, ${vids} with video` : ""}</p>${list.map(t => rowHtml(t, false)).join("")}</div>`; }).join("");
+    $("count").textContent = `Pick a topic. There are ${TOPICS.length} short guides in all.`;
+    $("cards").innerHTML = areas.map(a => { const n = TOPICS.filter(t => t.area === a).length;
+      return `<button class="acard" data-a="${a}"><span class="ic">${icon(a)}</span><span><b>${a}</b><small>${plural(n, "guide")}</small></span></button>`; }).join("");
+    $("cards").querySelectorAll(".acard").forEach(c => c.onclick = () => { curArea = c.dataset.a; render(); scrollTo(0, 0); track("open-area", curArea); });
   }
   $("list").querySelectorAll(".row,.gcard").forEach(r => r.onclick = () => open(r.dataset.id));
 }
