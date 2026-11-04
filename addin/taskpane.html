@@ -215,6 +215,8 @@ header .brand .hlogo{height:48px;width:auto;display:block;color:var(--ink)}
 .acard:hover{outline:2px solid var(--accent)}
 .acard .ic{width:40px;height:40px}
 .acards:empty{display:none}
+.inote{font-size:14px;line-height:1.45;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 16px}
+.inote[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -246,6 +248,7 @@ header .brand .hlogo{height:48px;width:auto;display:block;color:var(--ink)}
   <div class="crow"><p class="count" id="aCount"></p><label class="tgl" id="swapWrap" hidden><span>Image swap</span><button class="sw-t" id="swapMode" role="switch" aria-checked="false" aria-label="Image swap"><i></i></button><em id="swapState">Off</em></label></div>
   <div class="layerrow" id="layerRow"><button class="pill" id="sendBack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><rect x="4" y="4" width="11" height="11" rx="2" fill="var(--surface)"/></svg>Send selected to back</button><span>Puts a picture or box behind everything else on the slide.</span></div>
   <p class="swaphint" id="swapHint" hidden>Swap is on. On your slide, click the one picture you want to change, then choose its replacement here.</p>
+  <p class="inote" id="iconNote" hidden>All icons have transparent backgrounds. The tiles behind them here are just so you can see each one. Use white or green icons on navy or photos, and blue icons on light backgrounds.</p>
   <div class="grid" id="aGrid"></div>
   <p class="note" id="aTip"></p>
   <div class="out" id="aOut"></div>
@@ -430,7 +433,7 @@ function renderAssets(){
   $("aGrid").innerHTML = list.map(a => `<button class="asset" draggable="false" data-id="${a.id}" title="Insert ${esc(a.title)}"><img src="${a.thumb}" alt="" loading="lazy" draggable="false"${a.set ? ` class="ico ${a.set.toLowerCase()}"` : ""}><span>${esc(a.title)}${a.cat && !$("aCat").value ? `<small>${esc(a.cat)}</small>` : ""}</span></button>`).join("") || `<p class="note">Nothing matches that. Try other words, or choose a different category.</p>`;
   $("aGrid").querySelectorAll(".asset").forEach(b => b.onclick = () => insertAsset(b));
   $("aTip").textContent = TIPS[t] || "";
-  $("swapWrap").hidden = t !== "Images"; $("layerRow").hidden = t !== "Images"; if (t !== "Images" && SWAP) setSwap(false);
+  $("swapWrap").hidden = t !== "Images"; $("layerRow").hidden = t !== "Images"; $("iconNote").hidden = t !== "Icons"; if (t !== "Images" && SWAP) setSwap(false);
 }
 async function insertAsset(btn){
   const a = ASSETS.find(x => x.id === btn.dataset.id); const out = $("aOut");
