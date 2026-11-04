@@ -63,9 +63,9 @@ a{color:var(--lime)}
 </head>
 <body>
 <header><img src="icon-64.png" alt=""><b>Continu Help</b></header>
-<div class="tabs" role="tablist"><button class="on" data-p="help">Help</button><button data-p="decks">Presentations</button><button data-p="brand">Brand assets</button></div>
+<div class="tabs" role="tablist"><button class="on" data-p="decks">Presentations</button><button data-p="brand">Brand assets</button><button data-p="help">Help</button></div>
 
-<section class="pane on" id="help">
+<section class="pane" id="help">
   <div id="listView">
     <select class="fi" id="area" aria-label="Filter topics"></select>
     <input class="fi" id="q" type="search" placeholder="Search help" aria-label="Search help">
@@ -85,7 +85,7 @@ a{color:var(--lime)}
   <div class="out" id="aOut"></div>
 </section>
 
-<section class="pane" id="decks">
+<section class="pane on" id="decks">
   <div class="card">
     <h4>Build a deck</h4>
     <p>Copies the right slides from the library to the top of this deck, in order.</p>
