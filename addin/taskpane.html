@@ -251,6 +251,12 @@ html[data-theme=dark] .opencard .go{background:rgba(255,255,255,.14);color:#fff}
 .opencard{transition:transform .2s,filter .2s}
 .pane .card h4,.subh,.thead h3,.detail h3,.fgh,.ahead h3{font-weight:500}
 .pane .card h4{font-size:22px}.subh{font-size:25px}.thead h3,.detail h3{font-size:23px}.fgh{font-size:19px}
+.gbody b{font-size:24px;font-weight:500;line-height:1.15}
+.gbody small{font-size:15px;margin-top:8px}
+.gbody .gbtn{margin-top:16px}
+.gplay{left:14px;top:auto;bottom:32px;transform:none;width:40px;height:40px;padding-left:3px;background:var(--accent);-webkit-backdrop-filter:none;backdrop-filter:none;color:#2A4356;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.gplay svg{width:14px;height:15px}
+.gcard:hover .gplay{transform:scale(1.08);background:var(--accent)}
 </style>
 </head>
 <body>
@@ -386,7 +392,7 @@ const TONES = ["#B5EB03", "#A5D4F0", "#9AC490", "#CEA1C6", "#C2D0DA", "#B8C2B2"]
 const ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg>';
 // test: coloured cards for the Images topic only
 const colourCard = (t, i) => `<button class="ccard" data-id="${t.id}" style="background:${TONES[i % TONES.length]}"><span class="cimg">${t.video ? `<img src="${t.video.replace(".mp4", ".jpg")}" alt="" loading="lazy">` : `<span class="cph">${icon(t.area)}</span>`}</span><span class="carrow">${ARROW}</span><span class="cpill">${t.area}</span><b>${t.title}</b><small>${plural(t.steps.length, "step")}${TIMES[t.id] ? " · " + TIMES[t.id] : ""}${t.video ? " · Video" : ""}</small></button>`;
-const rowHtml = (t, showArea) => `<button class="gcard" data-id="${t.id}"><span class="gimg">${t.video ? `<img src="${t.video.replace(".mp4", ".jpg")}" alt="" loading="lazy"><span class="gplay"><svg width="12" height="13" viewBox="0 0 22 24"><path d="M2 2 L20 12 L2 22 Z" fill="currentColor"/></svg></span>` : `<span class="gph">${icon(t.area)}</span>`}</span><span class="gbody"><b>${t.title}</b><small>${showArea ? t.area + " · " : ""}${plural(t.steps.length, "step")}</small><span class="gbtn">${t.video ? "Watch video" : "See steps"}</span></span></button>`;
+const rowHtml = (t, showArea) => `<button class="gcard" data-id="${t.id}"><span class="gimg">${t.video ? `<img src="${t.video.replace(".mp4", ".jpg")}" alt="" loading="lazy"><span class="gplay"><svg width="12" height="13" viewBox="0 0 22 24"><path d="M2 2 L20 12 L2 22 Z" fill="currentColor"/></svg></span>` : `<span class="gph">${icon(t.area)}</span>`}</span><span class="gbody"><b>${t.title}</b><small>${showArea ? t.area + " · " : ""}${plural(t.steps.length, "step")}${TIMES[t.id] ? " · " + TIMES[t.id] : ""}</small><span class="gbtn">${t.video ? "Watch video" : "See steps"}</span></span></button>`;
 function render(){
   const f = $("q").value.trim().toLowerCase();
   $("area").value = curArea; $("q").placeholder = curArea ? `Search ${curArea}` : "Search all help";
@@ -403,7 +409,7 @@ function render(){
     const list = TOPICS.filter(t => t.area === curArea), vids = list.filter(t => t.video).length;
     $("areaHead").innerHTML = `<button class="back" id="toAreas">‹ All topics</button><div class="thead"><h3>${curArea}</h3></div>`;
     $("count").textContent = `${plural(list.length, "guide")}${vids ? `, ${vids} with video` : ""}`;
-    $("list").innerHTML = list.map((t, i) => curArea === "Images" ? colourCard(t, i) : rowHtml(t, false)).join("");
+    $("list").innerHTML = list.map(t => rowHtml(t, false)).join("");
     $("toAreas").onclick = () => { curArea = ""; render(); scrollTo(0, 0); };
   } else {
     $("count").textContent = `Pick a topic. There are ${TOPICS.length} short guides in all.`;
