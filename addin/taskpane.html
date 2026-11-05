@@ -1149,10 +1149,16 @@ document.getElementById("build").onclick = async () => {
       let filled = 0;
       try {
         say("Tidying the Endless Energy graphics…");
-        const sets = newIds.map(id => { const sh = ctx.presentation.slides.getItem(id).shapes; sh.load("items/name"); return sh; });
+        const sets = newIds.map(id => { const sh = ctx.presentation.slides.getItem(id).shapes; sh.load("items/name,items/type"); return sh; });
         await ctx.sync();
+        // placeholder types where available (newer PowerPoint), to catch SmartArt placeholders whatever they're called
+        const phTypes = new Map();
+        try { const pfs = []; sets.forEach(set => set.items.forEach(sh => { if (/placeholder/i.test(sh.type || "")) { const pf = sh.placeholderFormat; pf.load("type"); pfs.push([sh, pf]); } })); await ctx.sync(); pfs.forEach(([sh, pf]) => phTypes.set(sh, pf.type)); } catch(e) {}
         const ranges = [];
-        sets.forEach(set => set.items.forEach(sh => { if (/endless\s*energy/i.test(sh.name || "")) { try { const tr = sh.textFrame.textRange; tr.load("text"); ranges.push(tr); } catch(e) {} } }));
+        sets.forEach(set => set.items.forEach(sh => {
+          const isEndless = /endless\s*energy|smartart\s*placeholder/i.test(sh.name || "") || /smartart|diagram/i.test(phTypes.get(sh) || "");
+          if (isEndless) { try { const tr = sh.textFrame.textRange; tr.load("text"); ranges.push(tr); } catch(e) {} }
+        }));
         if (ranges.length) {
           try { await ctx.sync(); } catch(e) {}
           ranges.forEach(tr => { try { if (!(tr.text || "").trim()) { tr.text = "  "; filled++; } } catch(e) {} });
