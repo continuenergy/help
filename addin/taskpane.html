@@ -321,6 +321,13 @@ html[data-theme=dark] .fgroup{background:#2A4356}
 .fsech small{font-size:13.5px;font-weight:400;color:var(--muted)}
 #flowGroups .fgrid{padding:0;gap:12px}
 #flowGroups .fth{border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(42,67,86,.12)}
+.btnrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.btnrow .btn{flex:1 1 0;justify-content:center;text-align:center;display:inline-flex;align-items:center;gap:8px;margin:0}
+.ghostbtn{background:transparent !important;color:var(--ink) !important;border:1.5px solid var(--line) !important;box-shadow:none !important}
+html[data-theme=dark] .ghostbtn{border-color:rgba(255,255,255,.35) !important}
+.btnrow.off .ghostbtn{opacity:.45;cursor:default}
+.btnrow:not(.off) .ghostbtn:hover{outline:2px solid var(--accent)}
+.btnrow .btn{white-space:nowrap;height:46px;padding:0 12px !important;box-sizing:border-box;font-size:15px;border-radius:23px}
 </style>
 </head>
 <body>
@@ -373,9 +380,8 @@ html[data-theme=dark] .fgroup{background:#2A4356}
     <select class="fi" id="bPresenter"><option value="" disabled selected>Choose a presenter</option><option>Alison McFadden</option><option>Adam Holland</option><option>Glenn Townsley</option><option>Michelle Mallon</option><option>Tom Hall</option><option>Brian Treanor</option><option>Kerry-Anne M.</option><option>Chris Walker</option><option>Leon Clarke</option></select>
     <p class="ferr" id="presErr" hidden>Choose who's presenting before you build.</p>
     <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
-    <button class="btn" id="build">Build presentation</button>
+    <div class="btnrow off" id="resetRow"><button class="btn" id="build">Build presentation</button><button class="btn ghostbtn" id="resetBuild" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Start again</button></div>
     <div class="out" id="buildOut"></div>
-    <div class="resetrow off" id="resetRow"><button class="pill" id="resetBuild" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Start again</button><span id="resetNote"></span></div>
     <div class="confirm keep" id="libClean" hidden>
       <p><b>Your new presentation is ready.</b> It's the first <span id="lcNew"></span> slides of this file.</p>
       <p>Below it are <span id="lcOld"></span> other slides from the Continu slide library. You can delete those from this file now, so it only contains your presentation. Your presentation won't change, and the Continu template keeps its library for next time.</p>
@@ -894,7 +900,7 @@ $("lcGo").onclick = async () => {
 
 // ---------- Start again: remove slides made by the builder ----------
 function setReset(on){ $("resetRow").classList.toggle("off", !on); $("resetBuild").disabled = !on;
-  $("resetNote").textContent = on ? "Removes the presentation you built, so the file is back to just the library." : ""; }
+}
 async function builtSlides(ctx){
   const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
   const tags = all.items.map(sl => { const t = sl.tags; t.load("items/key,items/value"); return t; });
