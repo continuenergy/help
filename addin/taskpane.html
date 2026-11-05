@@ -328,6 +328,16 @@ html[data-theme=dark] .ghostbtn{border-color:rgba(255,255,255,.35) !important}
 .btnrow.off .ghostbtn{opacity:.45;cursor:default}
 .btnrow:not(.off) .ghostbtn:hover{outline:2px solid var(--accent)}
 .btnrow .btn{white-space:nowrap;height:46px;padding:0 12px !important;box-sizing:border-box;font-size:15px;border-radius:23px}
+.chk[hidden],#dayRow[hidden]{display:none !important}
+#dayRow{margin:0 0 20px}
+#dayRow .l{display:block;font-size:14px;color:var(--muted);margin:0 0 8px}
+.days{display:flex;gap:6px}
+.day{all:unset;cursor:pointer;flex:1;text-align:center;font-size:14px;font-weight:500;padding:10px 0;border-radius:14px;background:var(--field);border:1px solid var(--line);color:var(--ink)}
+.day:hover{outline:2px solid var(--accent)}
+.day[aria-checked=true]{background:var(--accent);border-color:var(--accent);color:#2A4356}
+#dayRow .ferr{margin:8px 2px 0}
+html[data-theme=dark] .day{background:#3B5A72;border-color:transparent}
+html[data-theme=dark] .day[aria-checked=true]{background:var(--accent);color:#2A4356}
 </style>
 </head>
 <body>
@@ -379,7 +389,8 @@ html[data-theme=dark] .ghostbtn{border-color:rgba(255,255,255,.35) !important}
     <label class="l" for="bPresenter">Who's presenting this?</label>
     <select class="fi" id="bPresenter"><option value="" disabled selected>Choose a presenter</option><option>Alison McFadden</option><option>Adam Holland</option><option>Glenn Townsley</option><option>Michelle Mallon</option><option>Tom Hall</option><option>Brian Treanor</option><option>Kerry-Anne M.</option><option>Chris Walker</option><option>Leon Clarke</option></select>
     <p class="ferr" id="presErr" hidden>Choose who's presenting before you build.</p>
-    <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
+    <label class="chk" id="callRow"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
+    <div id="dayRow" hidden><span class="l">Which day is the meeting?</span><div class="days" role="radiogroup" aria-label="Meeting day"><button class="day" role="radio" aria-checked="false" data-day="Monday">Mon</button><button class="day" role="radio" aria-checked="false" data-day="Tuesday">Tue</button><button class="day" role="radio" aria-checked="false" data-day="Wednesday">Wed</button><button class="day" role="radio" aria-checked="false" data-day="Thursday">Thu</button><button class="day" role="radio" aria-checked="false" data-day="Friday">Fri</button></div><p class="ferr" id="dayErr" hidden>Choose the day before you build.</p></div>
     <div class="btnrow off" id="resetRow"><button class="btn" id="build">Build presentation</button><button class="btn ghostbtn" id="resetBuild" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Start again</button></div>
     <div class="out" id="buildOut"></div>
     <div class="confirm keep" id="libClean" hidden>
@@ -724,8 +735,11 @@ async function loadFlow(force){
         if (/section|divider/i.test(rawLayout) || /^(yes|true)$/i.test(tg.CO_SECTION || "")) return; // skip the green library section headers
         const name = tg.CO_TYPE || tidyLayout(lays[i].name);
         if (!groups.has(name)) groups.set(name, []);
-        groups.get(name).push({ id: x.id, n: i + 1, recipes: (tg.CO_RECIPE || "").split(/[|,; ]+/).map(r => r.split(":")[0].toLowerCase()).filter(Boolean) });
+        groups.get(name).push({ id: x.id, n: i + 1, raw: rawLayout, recipes: (tg.CO_RECIPE || "").split(/[|,; ]+/).map(r => r.split(":")[0].toLowerCase()).filter(Boolean) });
       });
+      // the green library headers use the plain layout ("Agendas"); real slides use numbered ones ("Agendas | 01")
+      const numbered = r => /[|:–-]\s*\d+[a-z]?\s*$/i.test(r) || /\s\d+\s*$/.test(r);
+      groups.forEach((list, k) => { if (list.some(x => numbered(x.raw)) && list.some(x => !numbered(x.raw))) groups.set(k, list.filter(x => numbered(x.raw))); });
       FLOW = { groups: [...groups.entries()].map(([name, slides]) => ({ name, slides })) };
     });
     renderFlow();
@@ -762,12 +776,32 @@ function watchThumbs(){
   thumbObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { thumbObs.unobserve(e.target); const id = e.target.dataset.id; if (!THUMBS[id]) { thumbQueue.push(id); pumpThumbs(); } } }), { rootMargin: "300px" });
   els.forEach(el => { if (!THUMBS[el.dataset.id]) thumbObs.observe(el); });
 }
+// safety net: hide slides that are almost entirely Continu green (the library section headers)
+function isGreenHeader(src){
+  return new Promise(res => { const im = new Image(); im.onload = () => { try {
+    const c = document.createElement("canvas"); c.width = 32; c.height = 18; const g = c.getContext("2d"); g.drawImage(im, 0, 0, 32, 18);
+    const d = g.getImageData(0, 0, 32, 18).data; let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 140 && d[i + 1] > 190 && d[i + 2] < 90) n++;
+    res(n / (d.length / 4) > 0.6); } catch(e) { res(false); } }; im.onerror = () => res(false); im.src = src; });
+}
+const GREEN = new Set();
+function hideFlowSlide(id){
+  GREEN.add(id);
+  document.querySelectorAll(`.fslide[data-id="${id}"]`).forEach(el => {
+    const sec = el.closest(".fsec"); el.remove();
+    if (sec) { const left = sec.querySelectorAll(".fslide").length; if (!left) sec.remove(); else sec.querySelector(".fsech small").textContent = left; }
+  });
+  if (FLOW) FLOW.groups.forEach(g => g.slides = g.slides.filter(x => x.id !== id));
+  const total = FLOW ? FLOW.groups.reduce((a, g) => a + g.slides.length, 0) : 0;
+  $("flowCount").textContent = `${total} slides`;
+}
 async function pumpThumbs(){
   if (thumbBusy) return; thumbBusy = true;
   while (thumbQueue.length) {
     const id = thumbQueue.shift(); if (THUMBS[id]) continue;
     try {
       await PowerPoint.run(async ctx => { const im = ctx.presentation.slides.getItem(id).getImageAsBase64({ width: 480 }); await ctx.sync(); THUMBS[id] = "data:image/png;base64," + im.value; });
+      if (await isGreenHeader(THUMBS[id])) { hideFlowSlide(id); continue; }
       document.querySelectorAll(`.fslide[data-id="${id}"] .fth`).forEach(th => th.innerHTML = `<img src="${THUMBS[id]}" alt="">`);
     } catch(e) { thumbQueue = []; break; }
   }
@@ -931,6 +965,15 @@ $("resetBuild").onclick = async () => {
     });
   } catch(e) { toast("Couldn't start again: " + e.message); }
 };
+
+// deck-specific options
+function deckChanged(){
+  const d = $("bType").selectedOptions[0].dataset.deck;
+  $("callRow").hidden = d !== "Sales proposal";
+  $("dayRow").hidden = d !== "Morning meeting";
+}
+$("bType").addEventListener("change", deckChanged); deckChanged();
+document.querySelectorAll(".day").forEach(b => b.onclick = () => { document.querySelectorAll(".day").forEach(x => x.setAttribute("aria-checked", x === b)); $("dayErr").hidden = true; });
 document.getElementById("build").onclick = async () => {
   const presenter = document.getElementById("bPresenter").value;
   if (!presenter) { $("presErr").hidden = false; $("bPresenter").classList.add("bad"); $("bPresenter").focus(); return; }
@@ -938,7 +981,10 @@ document.getElementById("build").onclick = async () => {
   if (!typed && !window.__noCompanyOk) { $("noCompany").hidden = false; return; }
   window.__noCompanyOk = false; $("noCompany").hidden = true;
   const company = typed || "Company name";
-  const call = document.getElementById("bCall").checked;
+  const deckSel = $("bType").selectedOptions[0].dataset.deck;
+  const call = deckSel === "Sales proposal" ? document.getElementById("bCall").checked : true;
+  const DAY = deckSel === "Morning meeting" ? (document.querySelector(".day[aria-checked=true]") || {}).dataset?.day : null;
+  if (deckSel === "Morning meeting" && !DAY) { $("dayErr").hidden = false; return; }
   const RECIPE = document.getElementById("bType").value; track("build-deck", $("bType").selectedOptions[0].dataset.deck);
   if (!ready()){ say("Open this inside PowerPoint to use it."); return; }
   const need = ["1.3","1.5","1.8"].map(v => v + (Office.context.requirements.isSetSupported("PowerPointApi", v) ? " yes" : " no")).join(", ");
@@ -961,6 +1007,7 @@ document.getElementById("build").onclick = async () => {
         const opts = pos[n];
         let pick = opts.find(x => (x.tags.CO_PRESENTER || "").toLowerCase().includes(first)) || opts.find(x => (x.tags.CO_DEFAULT || "").toLowerCase() === "yes") || opts[0];
         if (!call && /discovery call/i.test(pick.tags.CO_OPTIONAL || "")) return;
+        if (DAY && pick.tags.CO_DAY && !pick.tags.CO_DAY.toLowerCase().split(/[|,; ]+/).includes(DAY.toLowerCase())) return;
         chosen.push(pick);
       });
       if (!chosen.length){ say("No slides tagged for the sales proposal were found in this deck.\nPowerPoint API support: " + need); return; }
