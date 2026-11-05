@@ -759,7 +759,7 @@ function fillFlowFilters(){
   const all = FLOW.groups.flatMap(g => g.slides);
   const beats = STORY.filter(b => all.some(x => x.beat === b.key));
   $("flowType").innerHTML = `<option value="">All slide types</option>`
-    + (beats.length ? `<optgroup label="Story stage">` + beats.map(b => `<option value="beat:${b.key}">${b.label} (${all.filter(x => x.beat === b.key).length})</option>`).join("") + `</optgroup>` : "")
+    + (beats.length ? `<optgroup label="Story anchor">` + beats.map(b => `<option value="beat:${b.key}">${b.label} (${all.filter(x => x.beat === b.key).length})</option>`).join("") + `</optgroup>` : "")
     + `<optgroup label="Slide type">` + FLOW.groups.map(g => `<option value="${esc(g.name)}">${esc(g.name)} (${g.slides.length})</option>`).join("") + `</optgroup>`;
   $("flowDeck").innerHTML = `<option value="">All deck types</option>` + deckOptions().map(o => `<option value="${esc(o.name)}">${esc(o.name)}</option>`).join("");
   $("flowType").value = t; $("flowDeck").value = d;
