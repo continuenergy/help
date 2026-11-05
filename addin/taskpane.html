@@ -316,6 +316,11 @@ html[data-theme=dark] .asset img.ico.white{background:#324E64}
 .fslide small{display:block;font-size:12.5px;color:var(--muted);margin:5px 2px 0}
 .fslide:hover .fth{outline:2px solid var(--accent)}
 html[data-theme=dark] .fgroup{background:#2A4356}
+.fsec{margin-bottom:26px}
+.fsech{display:flex;align-items:baseline;gap:10px;font-weight:500;font-size:19px;margin:0 2px 12px}
+.fsech small{font-size:13.5px;font-weight:400;color:var(--muted)}
+#flowGroups .fgrid{padding:0;gap:12px}
+#flowGroups .fth{border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(42,67,86,.12)}
 </style>
 </head>
 <body>
@@ -391,7 +396,7 @@ html[data-theme=dark] .fgroup{background:#2A4356}
   <div class="subview" id="flowView" hidden>
     <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
     <h3 class="subh">Add slides</h3>
-    <p class="intro">Choose a type of slide to see every version in the library. Click one to add a copy after the slide you're on.</p>
+    <p class="intro">Every pre-designed slide in the library. Click one to add a copy after the slide you're on, or filter by slide type or deck type.</p>
     <label class="al" for="flowType">Filter by slide type</label>
     <select class="fi" id="flowType"><option value="">All slide types</option></select>
     <label class="al" for="flowDeck">Filter by deck type</label>
@@ -693,7 +698,7 @@ document.querySelectorAll(".dlbtn").forEach(b => b.onclick = () => {
 
 // ---------- Build a slide flow ----------
 let FLOW = null; // { groups: [{name, slides:[{id,title}]}] }
-const tidyLayout = n => (n || "Other").replace(/^\d+[_\s.-]*/, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim() || "Other";
+const tidyLayout = n => (n || "Other").replace(/^\d+[_\s.-]*/, "").replace(/[_]+/g, " ").replace(/\s*[|:–-]\s*\d+[a-z]?\s*$/i, "").replace(/\s+\d+\s*$/, "").replace(/\s+/g, " ").trim() || "Other";
 async function loadFlow(force){
   if (FLOW && !force) return renderFlow();
   if (!ready()) { $("flowCount").textContent = "Open this inside PowerPoint to see the library slides."; return; }
@@ -712,7 +717,7 @@ async function loadFlow(force){
         if (!groups.has(name)) groups.set(name, []);
         groups.get(name).push({ id: x.id, n: i + 1, recipes: (tg.CO_RECIPE || "").split(/[|,; ]+/).map(r => r.split(":")[0].toLowerCase()).filter(Boolean) });
       });
-      FLOW = { groups: [...groups.entries()].map(([name, slides]) => ({ name, slides })).sort((a, b) => a.name.localeCompare(b.name)) };
+      FLOW = { groups: [...groups.entries()].map(([name, slides]) => ({ name, slides })) };
     });
     renderFlow();
   } catch(e) { $("flowCount").textContent = "Couldn't read the slides: " + e.message; }
@@ -732,13 +737,35 @@ function renderFlow(){
   const view = FLOW.groups.filter(g => !t || g.name === t).map(g => ({ name: g.name, slides: g.slides.filter(x => !key || x.recipes.includes(key)) })).filter(g => g.slides.length);
   FLOW.view = view;
   const total = view.reduce((a, g) => a + g.slides.length, 0);
-  $("flowCount").textContent = total ? `${total} ${total === 1 ? "slide" : "slides"} in ${view.length} ${view.length === 1 ? "type" : "types"}` : "No slides match those filters yet.";
-  $("flowGroups").innerHTML = view.map((g, gi) => `<div class="fgroup" data-g="${gi}"><button class="fghead"><span><b>${esc(g.name)}</b><small>${g.slides.length} ${g.slides.length === 1 ? "slide" : "slides"}</small></span><span class="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button><div class="fgrid" hidden></div></div>`).join("");
-  $("flowGroups").querySelectorAll(".fghead").forEach(h => h.onclick = () => openGroup(+h.parentNode.dataset.g));
-  if (t && view.length === 1) openGroup(0);
+  $("flowCount").textContent = total ? `${total} ${total === 1 ? "slide" : "slides"}${view.length > 1 ? ` in ${view.length} types` : ""}` : "No slides match that filter yet.";
+  $("flowGroups").innerHTML = view.map(g => `<section class="fsec"><h3 class="fsech">${esc(g.name)}<small>${g.slides.length}</small></h3><div class="fgrid">${g.slides.map(x => `<button class="fslide" data-id="${x.id}" title="Add a copy after the slide you're on"><span class="fth"><em>Slide ${x.n}</em></span></button>`).join("")}</div></section>`).join("");
+  $("flowGroups").querySelectorAll(".fslide").forEach(b => b.onclick = () => addFlowSlide(b.dataset.id));
+  watchThumbs();
 }
-$("flowType").onchange = () => { renderFlow(); track("flow-filter-type", $("flowType").value); };
-$("flowDeck").onchange = () => { renderFlow(); track("flow-filter-deck", $("flowDeck").value); };
+// load slide pictures as they scroll into view
+const THUMBS = {};
+let thumbObs = null, thumbQueue = [], thumbBusy = false;
+function watchThumbs(){
+  const els = [...$("flowGroups").querySelectorAll(".fslide")];
+  els.forEach(el => { if (THUMBS[el.dataset.id]) el.querySelector(".fth").innerHTML = `<img src="${THUMBS[el.dataset.id]}" alt="">`; });
+  if (!ready() || !Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) return;
+  if (thumbObs) thumbObs.disconnect();
+  thumbObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { thumbObs.unobserve(e.target); const id = e.target.dataset.id; if (!THUMBS[id]) { thumbQueue.push(id); pumpThumbs(); } } }), { rootMargin: "300px" });
+  els.forEach(el => { if (!THUMBS[el.dataset.id]) thumbObs.observe(el); });
+}
+async function pumpThumbs(){
+  if (thumbBusy) return; thumbBusy = true;
+  while (thumbQueue.length) {
+    const id = thumbQueue.shift(); if (THUMBS[id]) continue;
+    try {
+      await PowerPoint.run(async ctx => { const im = ctx.presentation.slides.getItem(id).getImageAsBase64({ width: 480 }); await ctx.sync(); THUMBS[id] = "data:image/png;base64," + im.value; });
+      document.querySelectorAll(`.fslide[data-id="${id}"] .fth`).forEach(th => th.innerHTML = `<img src="${THUMBS[id]}" alt="">`);
+    } catch(e) { thumbQueue = []; break; }
+  }
+  thumbBusy = false;
+}
+$("flowType").onchange = () => { if ($("flowType").value) $("flowDeck").value = ""; renderFlow(); track("flow-filter-type", $("flowType").value); };
+$("flowDeck").onchange = () => { if ($("flowDeck").value) $("flowType").value = ""; renderFlow(); track("flow-filter-deck", $("flowDeck").value); };
 async function openGroup(gi){
   const box = $("flowGroups").querySelector(`.fgroup[data-g="${gi}"]`), grid = box.querySelector(".fgrid");
   const wasOpen = box.classList.contains("open");
