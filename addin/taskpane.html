@@ -298,6 +298,24 @@ html[data-theme=dark] .asset img.ico.white{background:#324E64}
 .resetrow.off .pill{opacity:.45;cursor:default}
 .resetrow.off .pill:hover{outline:none}
 .resetrow.off span{opacity:.75}
+.flowbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px}
+.flowbar .count{margin:0 2px}
+.fgroup{background:var(--surface);border-radius:20px;margin-bottom:12px;overflow:hidden}
+.fghead{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;padding:16px 18px}
+.fghead b{display:block;font-weight:500;font-size:17px}
+.fghead small{display:block;font-size:13.5px;color:var(--muted);margin-top:2px}
+.fghead .go{width:36px;height:36px;border-radius:50%;background:var(--field);display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.fgroup.open .fghead .go{transform:rotate(180deg);background:var(--accent);color:#2A4356}
+.fgroup:hover{outline:2px solid var(--accent)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 16px}
+.fgrid[hidden]{display:none}
+.fslide{all:unset;cursor:pointer;display:block}
+.fth{display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--field);border:1px solid var(--line)}
+.fth img{width:100%;height:100%;object-fit:cover;display:block}
+.fth em{font-style:normal;font-size:12px;color:var(--muted)}
+.fslide small{display:block;font-size:12.5px;color:var(--muted);margin:5px 2px 0}
+.fslide:hover .fth{outline:2px solid var(--accent)}
+html[data-theme=dark] .fgroup{background:#2A4356}
 </style>
 </head>
 <body>
@@ -373,8 +391,9 @@ html[data-theme=dark] .asset img.ico.white{background:#324E64}
   <div class="subview" id="flowView" hidden>
     <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
     <h3 class="subh">Build a slide flow</h3>
-    <p class="intro">Choose a type of slide, see every version of it from the library, and click one to add it after the slide you're on.</p>
-    <span class="soon">Coming soon, once the new library slides are in</span>
+    <p class="intro">Choose a type of slide to see every version in the library. Click one to add a copy after the slide you're on.</p>
+    <div class="flowbar"><p class="count" id="flowCount"></p><button class="pill" id="flowRefresh"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Refresh</button></div>
+    <div id="flowGroups"></div>
   </div>
   <div class="subview" id="formatView" hidden>
     <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
@@ -667,8 +686,81 @@ document.querySelectorAll(".dlbtn").forEach(b => b.onclick = () => {
   const url = new URL(b.dataset.file, location.href).href; track("download-skill", b.dataset.file);
   try { Office.context.ui.openBrowserWindow(url); toast("Downloading in your browser."); } catch(e) { window.open(url, "_blank"); }
 });
+
+// ---------- Build a slide flow ----------
+let FLOW = null; // { groups: [{name, slides:[{id,title}]}] }
+const tidyLayout = n => (n || "Other").replace(/^\d+[_\s.-]*/, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim() || "Other";
+async function loadFlow(force){
+  if (FLOW && !force) return renderFlow();
+  if (!ready()) { $("flowCount").textContent = "Open this inside PowerPoint to see the library slides."; return; }
+  $("flowCount").textContent = "Reading the library…"; $("flowGroups").innerHTML = "";
+  try {
+    await PowerPoint.run(async ctx => {
+      const sl = ctx.presentation.slides; sl.load("items/id"); await ctx.sync();
+      const tags = sl.items.map(x => { const t = x.tags; t.load("items/key,items/value"); return t; });
+      const lays = sl.items.map(x => { const l = x.layout; l.load("name"); return l; });
+      await ctx.sync();
+      const groups = new Map();
+      sl.items.forEach((x, i) => {
+        const tg = {}; tags[i].items.forEach(t => tg[t.key.toUpperCase()] = t.value);
+        if (tg.CO_BUILT) return; // skip slides made by the builder
+        const name = tg.CO_TYPE || tidyLayout(lays[i].name);
+        if (!groups.has(name)) groups.set(name, []);
+        groups.get(name).push({ id: x.id, n: i + 1 });
+      });
+      FLOW = { groups: [...groups.entries()].map(([name, slides]) => ({ name, slides })).sort((a, b) => a.name.localeCompare(b.name)) };
+    });
+    renderFlow();
+  } catch(e) { $("flowCount").textContent = "Couldn't read the slides: " + e.message; }
+}
+function renderFlow(){
+  const total = FLOW.groups.reduce((a, g) => a + g.slides.length, 0);
+  $("flowCount").textContent = `${total} slides in ${FLOW.groups.length} types`;
+  $("flowGroups").innerHTML = FLOW.groups.map((g, gi) => `<div class="fgroup" data-g="${gi}"><button class="fghead"><span><b>${esc(g.name)}</b><small>${g.slides.length} ${g.slides.length === 1 ? "slide" : "slides"}</small></span><span class="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button><div class="fgrid" hidden></div></div>`).join("");
+  $("flowGroups").querySelectorAll(".fghead").forEach(h => h.onclick = () => openGroup(+h.parentNode.dataset.g));
+}
+async function openGroup(gi){
+  const box = $("flowGroups").querySelector(`.fgroup[data-g="${gi}"]`), grid = box.querySelector(".fgrid");
+  const wasOpen = box.classList.contains("open");
+  $("flowGroups").querySelectorAll(".fgroup").forEach(b => { b.classList.remove("open"); b.querySelector(".fgrid").hidden = true; });
+  if (wasOpen) return;
+  box.classList.add("open"); grid.hidden = false; box.scrollIntoView({ block: "start", behavior: "smooth" });
+  track("flow-open", FLOW.groups[gi].name);
+  if (grid.dataset.done) return;
+  const g = FLOW.groups[gi];
+  grid.innerHTML = g.slides.map(x => `<button class="fslide" data-id="${x.id}" title="Add a copy after the slide you're on"><span class="fth"><em>Slide ${x.n}</em></span><small>Slide ${x.n}</small></button>`).join("");
+  grid.querySelectorAll(".fslide").forEach(b => b.onclick = () => addFlowSlide(b.dataset.id));
+  grid.dataset.done = "1";
+  // thumbnails (newer PowerPoint only)
+  if (!ready() || !Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) return;
+  for (const x of g.slides) {
+    try {
+      await PowerPoint.run(async ctx => {
+        const im = ctx.presentation.slides.getItem(x.id).getImageAsBase64({ width: 480 }); await ctx.sync();
+        const th = grid.querySelector(`.fslide[data-id="${x.id}"] .fth`); if (th) th.innerHTML = `<img src="data:image/png;base64,${im.value}" alt="">`;
+      });
+    } catch(e) { break; }
+  }
+}
+async function addFlowSlide(id){
+  if (!ready()) return;
+  try {
+    await PowerPoint.run(async ctx => {
+      const cur = ctx.presentation.getSelectedSlides(); cur.load("items/id"); await ctx.sync();
+      const ex = ctx.presentation.slides.getItem(id).exportAsBase64(); await ctx.sync();
+      const o = { formatting: "KeepSourceFormatting" }; if (cur.items.length) o.targetSlideId = cur.items[0].id;
+      const before = ctx.presentation.slides; before.load("items/id"); await ctx.sync(); const had = new Set(before.items.map(x => x.id));
+      ctx.presentation.insertSlidesFromBase64(ex.value, o); await ctx.sync();
+      const after = ctx.presentation.slides; after.load("items/id"); await ctx.sync();
+      const added = after.items.find(x => !had.has(x.id));
+      if (added) { try { added.tags.add("CO_BUILT", "yes"); ctx.presentation.setSelectedSlides([added.id]); await ctx.sync(); } catch(e) {} }
+    });
+    toast("Added after the slide you're on."); track("flow-add", id); try { setReset(true); } catch(e) {}
+  } catch(e) { toast("Couldn't add it: " + e.message); }
+}
+$("flowRefresh").onclick = () => loadFlow(true);
 // ---------- Presentations sub-views ----------
-function showDeckView(id){ $("decksHome").hidden = !!id; ["flowView","formatView","skillsView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
+function showDeckView(id){ if (id === "flowView") setTimeout(() => loadFlow(false), 50); $("decksHome").hidden = !!id; ["flowView","formatView","skillsView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
 document.querySelectorAll(".opencard").forEach(c => c.onclick = () => showDeckView(c.dataset.view));
 document.querySelectorAll(".sub-back").forEach(b => b.onclick = () => showDeckView(null));
 // ---------- Formatting ----------
