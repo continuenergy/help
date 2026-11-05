@@ -361,6 +361,7 @@ html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
 .eean{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#2A4356;font-weight:500;font-size:13px;display:flex;align-items:center;justify-content:center}
 .eea b{display:block;font-weight:500;font-size:15px}
 .eea small{display:block;font-size:13.5px;color:var(--muted);margin-top:2px}
+#companyRow[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -406,9 +407,9 @@ html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
     <p>Choose the type of presentation and who it's for. The right slides are copied from the library to the start of this file, in the right order. The library itself stays as it is.</p>
     <label class="l" for="bType">Presentation type</label>
     <select class="fi" id="bType"><option value="energy-user" data-deck="Sales proposal">Sales proposal (32 slides)</option><option value="energy-user" data-deck="Short sales">Short sales (7–8 slides)</option><option value="energy-user" data-deck="Feasibility-study proposal">Feasibility-study proposal (10–16 slides)</option><option value="energy-user" data-deck="Follow-up recommendation">Follow-up recommendation (12–16 slides)</option><option value="energy-user" data-deck="Case study">Case study (8–12 slides)</option><option value="energy-user" data-deck="Conference">Conference (8–16 slides)</option><option value="energy-user" data-deck="Company overview">Company overview (12 slides)</option><option value="energy-user" data-deck="Morning meeting">Morning meeting (9 slides)</option></select>
-    <label class="l" for="bCompany">Prospect/Client Company Name</label>
+    <div id="companyRow"><label class="l" for="bCompany">Prospect/Client Company Name</label>
     <input class="fi" id="bCompany" placeholder="Type the company name">
-    <div class="confirm" id="noCompany" hidden><p>No company name? The cover will say "Company name" for you to fill in later.</p><div><button class="pill" id="ncAdd">Add a name</button><button class="pill solid" id="ncGo">Build without one</button></div></div>
+    <div class="confirm" id="noCompany" hidden><p>No company name? The cover will say "Company name" for you to fill in later.</p><div><button class="pill" id="ncAdd">Add a name</button><button class="pill solid" id="ncGo">Build without one</button></div></div></div>
     <label class="l" for="bPresenter">Who's presenting this?</label>
     <select class="fi" id="bPresenter"><option value="" disabled selected>Choose a presenter</option><option>Alison McFadden</option><option>Adam Holland</option><option>Glenn Townsley</option><option>Michelle Mallon</option><option>Tom Hall</option><option>Brian Treanor</option><option>Kerry-Anne M.</option><option>Chris Walker</option><option>Leon Clarke</option></select>
     <p class="ferr" id="presErr" hidden>Choose who's presenting before you build.</p>
@@ -1033,17 +1034,19 @@ function deckChanged(){
   const d = $("bType").selectedOptions[0].dataset.deck;
   $("callRow").hidden = d !== "Sales proposal";
   $("dayRow").hidden = d !== "Morning meeting";
+  $("companyRow").hidden = d === "Morning meeting"; if (d === "Morning meeting") $("noCompany").hidden = true;
 }
 $("bType").addEventListener("change", deckChanged); deckChanged();
 document.querySelectorAll(".day").forEach(b => b.onclick = () => { document.querySelectorAll(".day").forEach(x => x.setAttribute("aria-checked", x === b)); $("dayErr").hidden = true; });
 document.getElementById("build").onclick = async () => {
   const presenter = document.getElementById("bPresenter").value;
   if (!presenter) { $("presErr").hidden = false; $("bPresenter").classList.add("bad"); $("bPresenter").focus(); return; }
+  const deckSel = $("bType").selectedOptions[0].dataset.deck;
   const typed = document.getElementById("bCompany").value.trim();
-  if (!typed && !window.__noCompanyOk) { $("noCompany").hidden = false; return; }
+  const internal = deckSel === "Morning meeting";
+  if (!typed && !internal && !window.__noCompanyOk) { $("noCompany").hidden = false; return; }
   window.__noCompanyOk = false; $("noCompany").hidden = true;
   const company = typed || "Company name";
-  const deckSel = $("bType").selectedOptions[0].dataset.deck;
   const call = deckSel === "Sales proposal" ? document.getElementById("bCall").checked : true;
   const DAY = deckSel === "Morning meeting" ? (document.querySelector(".day[aria-checked=true]") || {}).dataset?.day : null;
   if (deckSel === "Morning meeting" && !DAY) { $("dayErr").hidden = false; return; }
@@ -1092,7 +1095,7 @@ document.getElementById("build").onclick = async () => {
         const cover = ctx.presentation.slides.getItem(newIds[0]); const shapes = cover.shapes; shapes.load("items/name"); await ctx.sync();
         for (const sh of shapes.items){
           try { const tr = sh.textFrame.textRange; tr.load("text"); await ctx.sync();
-            if (/Continu\s*$/.test(tr.text.trim()) && tr.text.length < 80){ tr.text = `Prepared for ${company} by ${presenter}, Continu`; await ctx.sync(); break; }
+            if (/Continu\s*$/.test(tr.text.trim()) && tr.text.length < 80){ tr.text = internal ? `Presented by ${presenter}, Continu` : `Prepared for ${company} by ${presenter}, Continu`; await ctx.sync(); break; }
           } catch(e){}
         }
       } catch(e){}
