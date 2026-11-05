@@ -291,6 +291,9 @@ html[data-theme=dark] .asset img.ico.white{background:#324E64}
 .acard .ic{position:absolute;top:14px;right:14px;width:52px;height:52px}
 .acard .ic svg{width:26px;height:26px;stroke-width:1.5}
 .acard > span:last-child{padding-right:4px}
+.resetrow{display:flex;align-items:center;gap:12px;margin:14px 0 0}
+.resetrow[hidden]{display:none}
+.resetrow span{font-size:13px;color:var(--muted);line-height:1.35}
 </style>
 </head>
 <body>
@@ -345,6 +348,7 @@ html[data-theme=dark] .asset img.ico.white{background:#324E64}
     <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
     <button class="btn" id="build">Build presentation</button>
     <div class="out" id="buildOut"></div>
+    <div class="resetrow" id="resetRow" hidden><button class="pill" id="resetBuild"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Start again</button><span>Removes the presentation you built, so the file is back to just the library.</span></div>
     <div class="confirm keep" id="libClean" hidden>
       <p><b>Your new presentation is ready.</b> It's the first <span id="lcNew"></span> slides of this file.</p>
       <p>Below it are <span id="lcOld"></span> other slides from the Continu slide library. You can delete those from this file now, so it only contains your presentation. Your presentation won't change, and the Continu template keeps its library for next time.</p>
@@ -744,6 +748,35 @@ $("lcGo").onclick = async () => {
     $("libClean").hidden = true; toast("Done. This file now only contains your presentation.");
   } catch(e) { toast("Couldn't remove them: " + e.message); }
 };
+
+// ---------- Start again: remove slides made by the builder ----------
+async function builtSlides(ctx){
+  const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
+  const tags = all.items.map(sl => { const t = sl.tags; t.load("items/key,items/value"); return t; });
+  await ctx.sync();
+  return { all: all.items, built: all.items.filter((sl, i) => tags[i].items.some(t => t.key.toUpperCase() === "CO_BUILT")) };
+}
+async function checkResetVisible(){
+  if (!ready()) return;
+  try { await PowerPoint.run(async ctx => { const r = await builtSlides(ctx); $("resetRow").hidden = !r.built.length; }); } catch(e) {}
+}
+$("resetBuild").onclick = async () => {
+  if (!ready()) { toast("Open this inside PowerPoint to use it."); return; }
+  track("reset-build");
+  try {
+    await PowerPoint.run(async ctx => {
+      const r = await builtSlides(ctx);
+      if (!r.built.length) { toast("There's no built presentation in this file."); $("resetRow").hidden = true; return; }
+      if (r.built.length === r.all.length) { toast("The library has already been removed from this file, so starting again would leave it empty. Open a fresh copy of the template instead."); return; }
+      const keep = r.all.find(sl => !r.built.includes(sl));
+      try { ctx.presentation.setSelectedSlides([keep.id]); await ctx.sync(); } catch(e) {}
+      r.built.forEach(sl => sl.delete()); await ctx.sync();
+      $("resetRow").hidden = true; $("libClean").hidden = true; $("buildOut").textContent = "";
+      window.__built = [];
+      toast(`Removed the ${r.built.length} built slides. The file is back to just the library.`);
+    });
+  } catch(e) { toast("Couldn't start again: " + e.message); }
+};
 document.getElementById("build").onclick = async () => {
   const presenter = document.getElementById("bPresenter").value;
   if (!presenter) { $("presErr").hidden = false; $("bPresenter").classList.add("bad"); $("bPresenter").focus(); return; }
@@ -788,6 +821,7 @@ document.getElementById("build").onclick = async () => {
         const after = ctx.presentation.slides; after.load("items/id"); await ctx.sync();
         const added = after.items.find(s => !had.has(s.id));
         lastId = added ? added.id : lastId; if (added) newIds.push(added.id);
+        if (added) { try { ctx.presentation.slides.getItem(added.id).tags.add("CO_BUILT", "yes"); } catch(e) {} }
         say(`Copying slides… ${i + 1} of ${chosen.length}`);
       }
       // cover line: "Prepared for <company> by <presenter>, Continu"
@@ -818,6 +852,7 @@ document.getElementById("build").onclick = async () => {
       say(`Done: ${newIds.length} slides at the top of the deck in ${secs} seconds.\nCheck the first slide is the cover, then scroll through.`);
       const total = ctx.presentation.slides; total.load("items"); await ctx.sync();
       const others = total.items.length - newIds.length;
+      $("resetRow").hidden = false;
       if (others > 0) { $("lcNew").textContent = newIds.length; $("lcOld").textContent = others; $("lcGo").textContent = `Delete the ${others} library slides`; $("libClean").hidden = false; }
     });
   } catch(e){ say("Stopped: " + e.message + "\nPowerPoint API support: " + need); }
@@ -838,7 +873,7 @@ function followOffice(){ if(window.__themeStored)return;
     const h=th.bodyBackgroundColor.replace('#',''); const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
     const lum=(0.299*((n>>16)&255)+0.587*((n>>8)&255)+0.114*(n&255));
     setTheme(lum>140?'light':'dark',false)}catch(e){}}
-if (window.Office) Office.onReady(() => {});
+if (window.Office) Office.onReady(() => { setTimeout(checkResetVisible, 1200); });
 </script>
 </body>
 </html>
