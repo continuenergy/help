@@ -257,6 +257,9 @@ html[data-theme=dark] .opencard .go{background:rgba(255,255,255,.14);color:#fff}
 .gplay{left:14px;top:auto;bottom:32px;transform:none;width:40px;height:40px;padding-left:3px;background:var(--accent);-webkit-backdrop-filter:none;backdrop-filter:none;color:#2A4356;box-shadow:0 4px 14px rgba(0,0,0,.2)}
 .gplay svg{width:14px;height:15px}
 .gcard:hover .gplay{transform:scale(1.08);background:var(--accent)}
+.back{display:inline-flex !important;align-items:center;gap:10px;font-size:16px !important;font-weight:500;color:var(--ink) !important;margin:2px 0 26px !important;padding:2px 0}
+.back .bk{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:background .2s}
+.back:hover .bk{background:var(--accent);border-color:var(--accent);color:#2A4356}
 </style>
 </head>
 <body>
@@ -315,20 +318,20 @@ html[data-theme=dark] .opencard .go{background:rgba(255,255,255,.14);color:#fff}
   <button class="card opencard t-mauve" data-view="skillsView"><span><h4>AI skills</h4><p>The Continu skills that teach ChatGPT to build presentations, documents and help the Continu way.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   </div>
   <div class="subview" id="skillsView" hidden>
-    <button class="back sub-back">‹ Presentations</button>
+    <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
     <h3 class="subh">AI skills</h3>
     <p class="intro">Each skill is a small file that teaches ChatGPT a Continu task. Download one, then add it to ChatGPT.</p>
     <div class="flist"><div class="skrow"><span class="ft"><b>Sales proposal</b><small>Builds the 32-slide sales proposal for a named company and presenter, from the tagged template.</small></span><button class="pill dlbtn" data-file="skills/continu-sales-proposal.zip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button></div><div class="skrow"><span class="ft"><b>Reading deck</b><small>Turns a Word document into a dense, text-led reading deck using the Continu Read layouts.</small></span><button class="pill dlbtn" data-file="skills/continu-reading-deck.zip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button></div><div class="skrow"><span class="ft"><b>Word document</b><small>Creates or rebrands a Word document using the Continu component library.</small></span><button class="pill dlbtn" data-file="skills/continu-word-document.zip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button></div><div class="skrow"><span class="ft"><b>PowerPoint help</b><small>Puts the right how-to help slide next to the one you're working on, with the steps.</small></span><button class="pill dlbtn" data-file="skills/continu-help.zip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button></div></div>
     <p class="note">Preview. In the final setup, one person installs and updates these for everyone, so nobody needs to download them.</p>
   </div>
   <div class="subview" id="flowView" hidden>
-    <button class="back sub-back">‹ Presentations</button>
+    <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
     <h3 class="subh">Build a slide flow</h3>
     <p class="intro">Choose a type of slide, see every version of it from the library, and click one to add it after the slide you're on.</p>
     <span class="soon">Coming soon, once the new library slides are in</span>
   </div>
   <div class="subview" id="formatView" hidden>
-    <button class="back sub-back">‹ Presentations</button>
+    <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
     <h3 class="subh">Quick formatting</h3>
 
   <p class="intro">Select some text or a picture on your slide, then click what you want to do.</p>
@@ -342,14 +345,14 @@ html[data-theme=dark] .opencard .go{background:rgba(255,255,255,.14);color:#fff}
   <h3 class="fgh">Lists</h3>
   <div class="flist">
     <button class="frow" data-f="bullets"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/><path d="M9 7h11M9 12h11M9 17h11"/></svg></span><span class="ft"><b>Turn bullets on or off</b><small>For the selected lines or box.</small></span></button>
-    <button class="frow soon-row" data-f="ticks"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l1.5 1.5L7 6M3 12.5l1.5 1.5L7 11.5M3 18l1.5 1.5L7 17M10 7h10M10 12.5h10M10 18h10"/></svg></span><span class="ft"><b>Change bullets to ticks</b><small>Coming soon</small></span></button>
-    <button class="frow soon-row" data-f="numbers"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h1.5v4M4 9h3M10 7h10M10 12.5h10M10 18h10M4 14.5a1.5 1.5 0 0 1 3 .5c0 1-3 2-3 3h3"/></svg></span><span class="ft"><b>Change bullets to numbers</b><small>Coming soon</small></span></button>
+    <button class="frow" data-f="ticks"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l1.5 1.5L7 6M3 12.5l1.5 1.5L7 11.5M3 18l1.5 1.5L7 17M10 7h10M10 12.5h10M10 18h10"/></svg></span><span class="ft"><b>Change bullets to ticks</b><small>Green ticks for the selected box.</small></span></button>
+    <button class="frow" data-f="numbers"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h1.5v4M4 9h3M10 7h10M10 12.5h10M10 18h10M4 14.5a1.5 1.5 0 0 1 3 .5c0 1-3 2-3 3h3"/></svg></span><span class="ft"><b>Change bullets to numbers</b><small>1, 2, 3 for the selected box.</small></span></button>
   </div>
   <h3 class="fgh">Pictures</h3>
   <div class="flist">
     <button class="frow" data-f="swap"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg></span><span class="ft"><b>Swap a picture, keep its shape</b><small>Opens the images with Image swap switched on.</small></span></button>
-    <button class="frow soon-row" data-f="circle"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg></span><span class="ft"><b>Crop a picture to a circle</b><small>Coming soon</small></span></button>
-    <button class="frow soon-row" data-f="fill"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 15l5-5 4 4 3-3 4 4"/></svg></span><span class="ft"><b>Fill the frame with the picture</b><small>Coming soon</small></span></button>
+    <button class="frow" data-f="circle"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg></span><span class="ft"><b>Crop a picture to a circle</b><small>Select a picture. It becomes a perfect circle, cropped to fill.</small></span></button>
+    <button class="frow" data-f="fill"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 15l5-5 4 4 3-3 4 4"/></svg></span><span class="ft"><b>Fill the frame with the picture</b><small>Select a picture. Fixes stretching and fills its frame neatly.</small></span></button>
     <button class="frow" data-f="crop"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg></span><span class="ft"><b>Crop a picture</b><small>Opens the step-by-step guide.</small></span></button>
   </div>
   <div class="out" id="fOut"></div>
@@ -407,7 +410,7 @@ function render(){
     clearTimeout(window.__qt); window.__qt = setTimeout(() => track("search", f + " → " + (list[0] ? list[0].id : "none")), 1200);
   } else if (curArea) {
     const list = TOPICS.filter(t => t.area === curArea), vids = list.filter(t => t.video).length;
-    $("areaHead").innerHTML = `<button class="back" id="toAreas">‹ All topics</button><div class="thead"><h3>${curArea}</h3></div>`;
+    $("areaHead").innerHTML = `<button class="back" id="toAreas"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>All topics</button><div class="thead"><h3>${curArea}</h3></div>`;
     $("count").textContent = `${plural(list.length, "guide")}${vids ? `, ${vids} with video` : ""}`;
     $("list").innerHTML = list.map(t => rowHtml(t, false)).join("");
     $("toAreas").onclick = () => { curArea = ""; render(); scrollTo(0, 0); };
@@ -422,7 +425,7 @@ function render(){
 function open(id){
   const t = TOPICS.find(x => x.id === id); if (!t) return;
   $("listView").hidden = true; $("detailView").hidden = false;
-  $("detailView").innerHTML = `<button class="back" id="back">‹ Back</button><div class="a">${t.area}</div><h3>${t.title}</h3>` +
+  $("detailView").innerHTML = `<button class="back" id="back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Back</button><div class="a">${t.area}</div><h3>${t.title}</h3>` +
     (t.video ? `<div class="player" id="player"><video muted loop playsinline preload="metadata" poster="${t.video.replace(".mp4", ".jpg")}" src="${t.video}"></video><button class="play" aria-label="Play the video"><span><svg width="22" height="24" viewBox="0 0 22 24"><path d="M2 2 L20 12 L2 22 Z" fill="#324E64"/></svg></span></button></div>` : `<div class="soon">The animation for this one is coming soon. The steps are below.</div>`) +
     `<ol>${t.steps.map(s => `<li>${s}</li>`).join("")}</ol>`;
   const pl = $("player");
@@ -623,6 +626,34 @@ async function onText(fn){
     await ctx.sync();
   });
 }
+
+// rebuild the current slide with an XML edit to the selected items
+async function rebuildSelected(mutate, what){
+  if (!Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) throw new Error("This version of PowerPoint can't do that from the panel yet. Updating Microsoft 365 should fix it.");
+  let info = null;
+  await PowerPoint.run(async ctx => {
+    const shapes = ctx.presentation.getSelectedShapes(); shapes.load("items/id,items/name,items/left,items/top,items/width,items/height");
+    const slides = ctx.presentation.getSelectedSlides(); slides.load("items/id"); await ctx.sync();
+    if (!shapes.items.length) throw new Error(`Select ${what} on your slide first.`);
+    const ex = slides.items[0].exportAsBase64(); await ctx.sync();
+    info = { slideId: slides.items[0].id, b64: ex.value, targets: shapes.items.map(x => ({ id: x.id, name: x.name, x: x.left * 12700, y: x.top * 12700, w: x.width * 12700, h: x.height * 12700 })) };
+  });
+  const out = await continuEdits.editSlideXml(info.b64, info.targets, mutate);
+  if (!out) throw new Error(`That doesn't look like ${what}. Select ${what} and try again.`);
+  await PowerPoint.run(async ctx => {
+    ctx.presentation.insertSlidesFromBase64(out, { formatting: "UseDestinationTheme", targetSlideId: info.slideId }); await ctx.sync();
+    const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
+    const i = all.items.findIndex(x => x.id === info.slideId); const fresh = all.items[i + 1];
+    all.items[i].delete(); await ctx.sync();
+    try { ctx.presentation.setSelectedSlides([fresh.id]); await ctx.sync(); } catch(e) {}
+  });
+}
+const REBUILDS = {
+  ticks: [() => continuEdits.ticks, "a text box"],
+  numbers: [() => continuEdits.numbers, "a text box"],
+  circle: [() => continuEdits.cropCircle, "a picture"],
+  fill: [() => continuEdits.fillFrame, "a picture"]
+};
 const FORMATS = {
   green: r => { r.font.color = "#B5EB03"; },
   navy: r => { r.font.color = "#2A4356"; },
@@ -637,6 +668,7 @@ document.querySelectorAll(".frow").forEach(b => b.onclick = async () => {
   if (k === "swap") { document.querySelector('.tabs button[data-p=brand]').click(); $("aType").value = "Images"; $("aType").onchange(); setSwap(true); return; }
   if (k === "crop") { document.querySelector('.tabs button[data-p=help]').click(); open("crop-image"); return; }
   if (!ready()) { out.textContent = "Open this inside PowerPoint to use it."; return; }
+  if (REBUILDS[k]) { try { await rebuildSelected(REBUILDS[k][0](), REBUILDS[k][1]); toast("Done."); } catch(e) { toast(e.message); } return; }
   try { await onText(FORMATS[k]); out.textContent = "Done."; toast("Done."); } catch(e) { out.textContent = e.message.startsWith("Select") ? e.message : "Couldn't do that here: " + e.message; toast(out.textContent); }
 });
 $("aType").onchange = () => { $("aCat").value = ""; $("aQ").value = ""; renderAssets(); }; $("aQ").oninput = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
