@@ -719,6 +719,8 @@ async function loadFlow(force){
       sl.items.forEach((x, i) => {
         const tg = {}; tags[i].items.forEach(t => tg[t.key.toUpperCase()] = t.value);
         if (tg.CO_BUILT) return; // skip slides made by the builder
+        const rawLayout = lays[i].name || "";
+        if (/section|divider/i.test(rawLayout) || /^(yes|true)$/i.test(tg.CO_SECTION || "")) return; // skip the green library section headers
         const name = tg.CO_TYPE || tidyLayout(lays[i].name);
         if (!groups.has(name)) groups.set(name, []);
         groups.get(name).push({ id: x.id, n: i + 1, recipes: (tg.CO_RECIPE || "").split(/[|,; ]+/).map(r => r.split(":")[0].toLowerCase()).filter(Boolean) });
