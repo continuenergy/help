@@ -370,7 +370,7 @@ html[data-theme=dark] .fgroup{background:#2A4356}
     <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
     <button class="btn" id="build">Build presentation</button>
     <div class="out" id="buildOut"></div>
-    <div class="resetrow off" id="resetRow"><button class="pill" id="resetBuild" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Start again</button><span id="resetNote">Available once you've built a presentation.</span></div>
+    <div class="resetrow off" id="resetRow"><button class="pill" id="resetBuild" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Start again</button><span id="resetNote"></span></div>
     <div class="confirm keep" id="libClean" hidden>
       <p><b>Your new presentation is ready.</b> It's the first <span id="lcNew"></span> slides of this file.</p>
       <p>Below it are <span id="lcOld"></span> other slides from the Continu slide library. You can delete those from this file now, so it only contains your presentation. Your presentation won't change, and the Continu template keeps its library for next time.</p>
@@ -867,7 +867,7 @@ $("lcGo").onclick = async () => {
 
 // ---------- Start again: remove slides made by the builder ----------
 function setReset(on){ $("resetRow").classList.toggle("off", !on); $("resetBuild").disabled = !on;
-  $("resetNote").textContent = on ? "Removes the presentation you built, so the file is back to just the library." : "Available once you've built a presentation."; }
+  $("resetNote").textContent = on ? "Removes the presentation you built, so the file is back to just the library." : ""; }
 async function builtSlides(ctx){
   const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
   const tags = all.items.map(sl => { const t = sl.tags; t.load("items/key,items/value"); return t; });
