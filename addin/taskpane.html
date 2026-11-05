@@ -338,6 +338,29 @@ html[data-theme=dark] .ghostbtn{border-color:rgba(255,255,255,.35) !important}
 #dayRow .ferr{margin:8px 2px 0}
 html[data-theme=dark] .day{background:#3B5A72;border-color:transparent}
 html[data-theme=dark] .day[aria-checked=true]{background:var(--accent);color:#2A4356}
+:root{--t-stone:#E6E3D8}
+html[data-theme=dark]{--t-stone:#E6E3D8}
+.pane .opencard.t-stone{background:var(--t-stone)}
+.sblock{background:var(--surface);border-radius:22px;padding:20px;margin:0 0 22px}
+html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
+.sbh{font-weight:500;font-size:20px;margin:0 0 10px}
+.sbh.out{margin:4px 2px 12px}
+.aud{font-size:22px;font-weight:500;margin:0 0 4px;color:var(--ink)}
+.audsub{font-size:14.5px;color:var(--muted);margin:0 0 14px;line-height:1.45}
+.sblock h5{font-size:15px;font-weight:500;margin:16px 0 8px}
+.sl{margin:0;padding:0 0 0 18px}
+.sl li{font-size:14.5px;line-height:1.45;margin:0 0 8px}
+.sl li b{font-weight:500}
+.anc{background:var(--surface);border-radius:20px;padding:18px 20px;margin:0 0 12px}
+.anchd{display:flex;align-items:baseline;gap:12px}
+.anchd b{font-weight:500;font-size:14px;color:var(--muted)}
+.anchd h4{font-weight:500;font-size:19px;margin:0}
+.anc p{font-size:14.5px;line-height:1.45;margin:8px 0 12px}
+.eea{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.eea:first-of-type{border-top:0}
+.eean{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#2A4356;font-weight:500;font-size:13px;display:flex;align-items:center;justify-content:center}
+.eea b{display:block;font-weight:500;font-size:15px}
+.eea small{display:block;font-size:13.5px;color:var(--muted);margin-top:2px}
 </style>
 </head>
 <body>
@@ -400,6 +423,7 @@ html[data-theme=dark] .day[aria-checked=true]{background:var(--accent);color:#2A
     </div>
   </div>
   <button class="card opencard t-sage" data-view="flowView"><span><h4>Add individual slides</h4><p>Browse the slide library and add individual slides to your presentation.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+  <button class="card opencard t-stone" data-view="storyView"><span><h4>Telling the Continu story</h4><p>Who we talk to, the story anchors, and the Endless Energy Accelerator, at a glance.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   <button class="card opencard t-sky" data-view="formatView"><span><h4>Quick formatting</h4><p>One-click fixes for text, bullets and pictures, in the Continu style.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   <button class="card opencard t-mauve" data-view="skillsView"><span><h4>AI skills</h4><p>The Continu skills that teach ChatGPT to build presentations, documents and help the Continu way.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   </div>
@@ -409,6 +433,22 @@ html[data-theme=dark] .day[aria-checked=true]{background:var(--accent);color:#2A
     <p class="intro">Each skill is a small file that teaches ChatGPT a Continu task. Download one, then add it to ChatGPT.</p>
     <div class="flist"><div class="skrow"><span class="ft"><b>Sales proposal</b><small>Builds the 32-slide sales proposal for a named company and presenter.</small></span><button class="pill dlbtn" data-file="skills/continu-sales-proposal.zip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button></div><div class="skrow"><span class="ft"><b>Short sales</b><small>A 7–8 slide deck to earn the next conversation.</small></span><span class="soon">Coming soon</span></div><div class="skrow"><span class="ft"><b>Feasibility-study proposal</b><small>Makes the case for a site feasibility study, in 10–16 slides.</small></span><span class="soon">Coming soon</span></div><div class="skrow"><span class="ft"><b>Follow-up recommendation</b><small>Turns feasibility findings into a clear recommendation.</small></span><span class="soon">Coming soon</span></div><div class="skrow"><span class="ft"><b>Case study</b><small>Tells one client story as evidence, in 8–12 slides.</small></span><span class="soon">Coming soon</span></div><div class="skrow"><span class="ft"><b>Conference</b><small>A 20–30 minute thought-leadership talk.</small></span><span class="soon">Coming soon</span></div><div class="skrow"><span class="ft"><b>Company overview</b><small>The 12-slide introduction to Continu.</small></span><span class="soon">Coming soon</span></div><div class="skrow"><span class="ft"><b>Morning meeting</b><small>All four days of the internal morning meeting, in one skill.</small></span><span class="soon">Coming soon</span></div><div class="skrow"><span class="ft"><b>Docuslide</b><small>Turns a Word document into a dense, text-led reading deck.</small></span><button class="pill dlbtn" data-file="skills/continu-reading-deck.zip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button></div><div class="skrow"><span class="ft"><b>PowerPoint help</b><small>Puts the right how-to help next to the slide you're working on.</small></span><button class="pill dlbtn" data-file="skills/continu-help.zip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button></div></div>
     <p class="note">Preview. In the final setup, one person installs and updates these for everyone, so nobody needs to download them.</p>
+  </div>
+  <div class="subview" id="storyView" hidden>
+    <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
+    <h3 class="subh">Telling the Continu story</h3>
+    <p class="intro">A reminder of who we're talking to and how the story moves, drawn from the sales proposal.</p>
+    <div class="sblock"><h4 class="sbh">Who we're talking to</h4>
+      <p class="aud">Operational Energy Users</p>
+      <p class="audsub">Commercial and industrial, business-critical, multi-site and high energy users.</p>
+      <h5>The challenges we solve</h5>
+      <ul class="sl"><li><b>Power disruption.</b> Outages, poor power quality and interruptions that stop production and create costly recovery.</li><li><b>Uncontrollable energy costs.</b> High, unpredictable prices that squeeze margin and make budgeting harder.</li><li><b>Backup power complexity.</b> Multiple systems and suppliers, limited visibility and unclear ownership.</li></ul>
+      <h5>How it feels across the business</h5>
+      <ul class="sl"><li><b>Business owners:</b> energy anxiety.</li><li><b>IT managers:</b> ambient anxiety.</li><li><b>Maintenance managers:</b> downtime dread.</li></ul>
+    </div>
+    <h4 class="sbh out">The story anchors</h4>
+    <div class="anc"><div class="anchd"><b>01</b><h4>Setting the scene</h4></div><p>Show you understand their world. Recap their priorities, name the challenges we solve, and show how every industry is shifting through electrification, automation and digitalisation.</p><button class="pill anclink" data-beat="setting">See setting the scene slides</button></div><div class="anc"><div class="anchd"><b>02</b><h4>Conflict</h4></div><p>Build the tension. Rising energy dependence, a built-in cost disadvantage, volatility, a grid that can't keep up, worsening power quality, the cost of downtime, and partial fixes that create bigger problems.</p><button class="pill anclink" data-beat="conflict">See conflict slides</button></div><div class="anc"><div class="anchd"><b>03</b><h4>Big idea</h4></div><p>The turning point: take control of your energy with one connected system that keeps power under control.</p><button class="pill anclink" data-beat="big idea">See big idea slides</button></div><div class="anc"><div class="anchd"><b>04</b><h4>Resolution</h4></div><p>Show how Continu makes it real: why Continu, the team, the site-wide approach and the five steps of the Endless Energy Accelerator.</p><button class="pill anclink" data-beat="resolution">See resolution slides</button></div><div class="anc"><div class="anchd"><b>05</b><h4>Proof</h4></div><p>Earn belief with awards, the power-critical sectors that trust Continu, our track record, case studies and clients' own words.</p><button class="pill anclink" data-beat="proof">See proof slides</button></div><div class="anc"><div class="anchd"><b>06</b><h4>Close</h4></div><p>Ask for one clear next step, such as a lunch and learn for their team.</p><button class="pill anclink" data-beat="close">See close slides</button></div>
+    <div class="sblock"><h4 class="sbh">The Endless Energy Accelerator</h4><p class="audsub">Five steps that move energy from complexity to control.</p><div class="eea"><span class="eean">01</span><span><b>Tailored, Optimised Design</b><small>Confident investment decisions</small></span></div><div class="eea"><span class="eean">02</span><span><b>Trusted Install and Commission</b><small>Guaranteed continuous power</small></span></div><div class="eea"><span class="eean">03</span><span><b>On the Gemba Training</b><small>Lean operations</small></span></div><div class="eea"><span class="eean">04</span><span><b>Seamless Service Support</b><small>Simple, expert UPS & BESS asset management</small></span></div><div class="eea"><span class="eean">05</span><span><b>Continu.eye Remote Monitoring</b><small>Up to 50% reduction in energy costs</small></span></div></div>
   </div>
   <div class="subview" id="flowView" hidden>
     <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
@@ -767,6 +807,7 @@ function fillFlowFilters(){
 function renderFlow(){
   if (!FLOW) return;
   if ($("flowType").options.length <= 1) fillFlowFilters();
+  if (window.__pendingBeat) { const v = "beat:" + window.__pendingBeat; window.__pendingBeat = null; if ([...$("flowType").options].some(o => o.value === v)) { $("flowType").value = v; $("flowDeck").value = ""; } }
   const t = $("flowType").value, dn = $("flowDeck").value;
   const key = dn ? (deckOptions().find(o => o.name === dn) || {}).key : "";
   let view;
@@ -868,8 +909,10 @@ async function addFlowSlide(id){
   } catch(e) { toast("Couldn't add it: " + e.message); }
 }
 $("flowRefresh").onclick = () => { $("flowType").innerHTML = `<option value="">All slide types</option>`; loadFlow(true); };
+// story anchors link to their slides
+document.querySelectorAll(".anclink").forEach(b => b.onclick = () => { window.__pendingBeat = b.dataset.beat; track("story-anchor", b.dataset.beat); showDeckView("flowView"); });
 // ---------- Presentations sub-views ----------
-function showDeckView(id){ if (id === "flowView") setTimeout(() => loadFlow(false), 50); $("decksHome").hidden = !!id; ["flowView","formatView","skillsView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
+function showDeckView(id){ if (id === "flowView") setTimeout(() => loadFlow(false), 50); $("decksHome").hidden = !!id; ["flowView","formatView","skillsView","storyView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
 document.querySelectorAll(".opencard").forEach(c => c.onclick = () => showDeckView(c.dataset.view));
 document.querySelectorAll(".sub-back").forEach(b => b.onclick = () => showDeckView(null));
 // ---------- Formatting ----------
