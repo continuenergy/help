@@ -260,6 +260,16 @@ html[data-theme=dark] .opencard .go{background:rgba(255,255,255,.14);color:#fff}
 .back{display:inline-flex !important;align-items:center;gap:10px;font-size:16px !important;font-weight:500;color:var(--ink) !important;margin:2px 0 26px !important;padding:2px 0}
 .back .bk{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:background .2s}
 .back:hover .bk{background:var(--accent);border-color:var(--accent);color:#2A4356}
+:root{--warn:#C2410C}
+html[data-theme=dark]{--warn:#FDBA74}
+.ferr{color:var(--warn);font-size:14px;font-weight:500;margin:-12px 2px 18px}
+.ferr[hidden],.confirm[hidden]{display:none}
+.fi.bad{outline:2px solid var(--warn);outline-offset:0}
+.confirm{background:var(--field);border-left:3px solid var(--warn);border-radius:12px;padding:12px 14px;margin:-8px 0 20px}
+.confirm p{font-size:14px !important;margin:0 0 10px !important;color:var(--ink)}
+.confirm div{display:flex;gap:8px;flex-wrap:wrap}
+.pill.solid{background:var(--accent);color:#2A4356;border-color:var(--accent)}
+.pane .card p.ferr{color:var(--warn);font-size:14px;font-weight:500;margin:-12px 2px 18px}
 </style>
 </head>
 <body>
@@ -307,8 +317,10 @@ html[data-theme=dark] .opencard .go{background:rgba(255,255,255,.14);color:#fff}
     <select class="fi" id="bType"><option value="energy-user">Sales proposal (32 slides)</option></select>
     <label class="l" for="bCompany">Prospect/Client Company Name</label>
     <input class="fi" id="bCompany" placeholder="Type the company name">
+    <div class="confirm" id="noCompany" hidden><p>No company name? The cover will say "Company name" for you to fill in later.</p><div><button class="pill" id="ncAdd">Add a name</button><button class="pill solid" id="ncGo">Build without one</button></div></div>
     <label class="l" for="bPresenter">Who's presenting this?</label>
     <select class="fi" id="bPresenter"><option value="" disabled selected>Choose a presenter</option><option>Alison McFadden</option><option>Adam Holland</option><option>Glenn Townsley</option><option>Michelle Mallon</option><option>Tom Hall</option><option>Brian Treanor</option><option>Kerry-Anne M.</option><option>Chris Walker</option><option>Leon Clarke</option></select>
+    <p class="ferr" id="presErr" hidden>Choose who's presenting before you build.</p>
     <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
     <button class="btn" id="build">Build presentation</button>
     <div class="out" id="buildOut"></div>
@@ -687,10 +699,17 @@ $("aType").onchange = () => { $("aCat").value = ""; $("aQ").value = ""; renderAs
 // ---------- Build a deck (test) ----------
 
 function say(t){ document.getElementById("buildOut").textContent = t; }
+$("bPresenter").addEventListener("change", () => { $("presErr").hidden = true; $("bPresenter").classList.remove("bad"); });
+$("bCompany").addEventListener("input", () => { $("noCompany").hidden = true; });
+$("ncAdd").onclick = () => { $("noCompany").hidden = true; $("bCompany").focus(); };
+$("ncGo").onclick = () => { window.__noCompanyOk = true; $("build").click(); };
 document.getElementById("build").onclick = async () => {
-  const company = document.getElementById("bCompany").value.trim() || "Company name";
   const presenter = document.getElementById("bPresenter").value;
-  if (!presenter) { document.getElementById("buildOut").textContent = "Choose who's presenting first."; return; }
+  if (!presenter) { $("presErr").hidden = false; $("bPresenter").classList.add("bad"); $("bPresenter").focus(); return; }
+  const typed = document.getElementById("bCompany").value.trim();
+  if (!typed && !window.__noCompanyOk) { $("noCompany").hidden = false; return; }
+  window.__noCompanyOk = false; $("noCompany").hidden = true;
+  const company = typed || "Company name";
   const call = document.getElementById("bCall").checked;
   const RECIPE = document.getElementById("bType").value; track("build-deck", RECIPE);
   if (!ready()){ say("Open this inside PowerPoint to use it."); return; }
