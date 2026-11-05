@@ -715,10 +715,11 @@ async function loadFlow(force){
       const tags = sl.items.map(x => { const t = x.tags; t.load("items/key,items/value"); return t; });
       const lays = sl.items.map(x => { const l = x.layout; l.load("name"); return l; });
       await ctx.sync();
-      const groups = new Map();
+      const groups = new Map(); window.__seenFirst = false;
       sl.items.forEach((x, i) => {
         const tg = {}; tags[i].items.forEach(t => tg[t.key.toUpperCase()] = t.value);
         if (tg.CO_BUILT) return; // skip slides made by the builder
+        if (!window.__seenFirst) { window.__seenFirst = true; return; } // skip the template's preview slide (first library slide)
         const rawLayout = lays[i].name || "";
         if (/section|divider/i.test(rawLayout) || /^(yes|true)$/i.test(tg.CO_SECTION || "")) return; // skip the green library section headers
         const name = tg.CO_TYPE || tidyLayout(lays[i].name);
