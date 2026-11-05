@@ -392,6 +392,10 @@ html[data-theme=dark] .fgroup{background:#2A4356}
     <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
     <h3 class="subh">Build a slide flow</h3>
     <p class="intro">Choose a type of slide to see every version in the library. Click one to add a copy after the slide you're on.</p>
+    <label class="al" for="flowType">Filter by slide type</label>
+    <select class="fi" id="flowType"><option value="">All slide types</option></select>
+    <label class="al" for="flowDeck">Filter by deck type</label>
+    <select class="fi" id="flowDeck"><option value="">All deck types</option></select>
     <div class="flowbar"><p class="count" id="flowCount"></p><button class="pill" id="flowRefresh"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Refresh</button></div>
     <div id="flowGroups"></div>
   </div>
@@ -693,7 +697,7 @@ const tidyLayout = n => (n || "Other").replace(/^\d+[_\s.-]*/, "").replace(/[_]+
 async function loadFlow(force){
   if (FLOW && !force) return renderFlow();
   if (!ready()) { $("flowCount").textContent = "Open this inside PowerPoint to see the library slides."; return; }
-  $("flowCount").textContent = "Reading the library…"; $("flowGroups").innerHTML = "";
+  $("flowCount").textContent = "Reading the library…"; $("flowGroups").innerHTML = ""; $("flowType").innerHTML = `<option value="">All slide types</option>`;
   try {
     await PowerPoint.run(async ctx => {
       const sl = ctx.presentation.slides; sl.load("items/id"); await ctx.sync();
@@ -706,28 +710,44 @@ async function loadFlow(force){
         if (tg.CO_BUILT) return; // skip slides made by the builder
         const name = tg.CO_TYPE || tidyLayout(lays[i].name);
         if (!groups.has(name)) groups.set(name, []);
-        groups.get(name).push({ id: x.id, n: i + 1 });
+        groups.get(name).push({ id: x.id, n: i + 1, recipes: (tg.CO_RECIPE || "").split(/[|,; ]+/).map(r => r.split(":")[0].toLowerCase()).filter(Boolean) });
       });
       FLOW = { groups: [...groups.entries()].map(([name, slides]) => ({ name, slides })).sort((a, b) => a.name.localeCompare(b.name)) };
     });
     renderFlow();
   } catch(e) { $("flowCount").textContent = "Couldn't read the slides: " + e.message; }
 }
-function renderFlow(){
-  const total = FLOW.groups.reduce((a, g) => a + g.slides.length, 0);
-  $("flowCount").textContent = `${total} slides in ${FLOW.groups.length} types`;
-  $("flowGroups").innerHTML = FLOW.groups.map((g, gi) => `<div class="fgroup" data-g="${gi}"><button class="fghead"><span><b>${esc(g.name)}</b><small>${g.slides.length} ${g.slides.length === 1 ? "slide" : "slides"}</small></span><span class="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button><div class="fgrid" hidden></div></div>`).join("");
-  $("flowGroups").querySelectorAll(".fghead").forEach(h => h.onclick = () => openGroup(+h.parentNode.dataset.g));
+function deckOptions(){ return [...$("bType").options].map(o => ({ name: o.dataset.deck, key: o.value })); }
+function fillFlowFilters(){
+  const t = $("flowType").value, d = $("flowDeck").value;
+  $("flowType").innerHTML = `<option value="">All slide types</option>` + FLOW.groups.map(g => `<option value="${esc(g.name)}">${esc(g.name)} (${g.slides.length})</option>`).join("");
+  $("flowDeck").innerHTML = `<option value="">All deck types</option>` + deckOptions().map(o => `<option value="${esc(o.name)}">${esc(o.name)}</option>`).join("");
+  $("flowType").value = t; $("flowDeck").value = d;
 }
+function renderFlow(){
+  if (!FLOW) return;
+  if ($("flowType").options.length <= 1) fillFlowFilters();
+  const t = $("flowType").value, dn = $("flowDeck").value;
+  const key = dn ? (deckOptions().find(o => o.name === dn) || {}).key : "";
+  const view = FLOW.groups.filter(g => !t || g.name === t).map(g => ({ name: g.name, slides: g.slides.filter(x => !key || x.recipes.includes(key)) })).filter(g => g.slides.length);
+  FLOW.view = view;
+  const total = view.reduce((a, g) => a + g.slides.length, 0);
+  $("flowCount").textContent = total ? `${total} ${total === 1 ? "slide" : "slides"} in ${view.length} ${view.length === 1 ? "type" : "types"}` : "No slides match those filters yet.";
+  $("flowGroups").innerHTML = view.map((g, gi) => `<div class="fgroup" data-g="${gi}"><button class="fghead"><span><b>${esc(g.name)}</b><small>${g.slides.length} ${g.slides.length === 1 ? "slide" : "slides"}</small></span><span class="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button><div class="fgrid" hidden></div></div>`).join("");
+  $("flowGroups").querySelectorAll(".fghead").forEach(h => h.onclick = () => openGroup(+h.parentNode.dataset.g));
+  if (t && view.length === 1) openGroup(0);
+}
+$("flowType").onchange = () => { renderFlow(); track("flow-filter-type", $("flowType").value); };
+$("flowDeck").onchange = () => { renderFlow(); track("flow-filter-deck", $("flowDeck").value); };
 async function openGroup(gi){
   const box = $("flowGroups").querySelector(`.fgroup[data-g="${gi}"]`), grid = box.querySelector(".fgrid");
   const wasOpen = box.classList.contains("open");
   $("flowGroups").querySelectorAll(".fgroup").forEach(b => { b.classList.remove("open"); b.querySelector(".fgrid").hidden = true; });
   if (wasOpen) return;
   box.classList.add("open"); grid.hidden = false; box.scrollIntoView({ block: "start", behavior: "smooth" });
-  track("flow-open", FLOW.groups[gi].name);
+  track("flow-open", FLOW.view[gi].name);
   if (grid.dataset.done) return;
-  const g = FLOW.groups[gi];
+  const g = FLOW.view[gi];
   grid.innerHTML = g.slides.map(x => `<button class="fslide" data-id="${x.id}" title="Add a copy after the slide you're on"><span class="fth"><em>Slide ${x.n}</em></span><small>Slide ${x.n}</small></button>`).join("");
   grid.querySelectorAll(".fslide").forEach(b => b.onclick = () => addFlowSlide(b.dataset.id));
   grid.dataset.done = "1";
@@ -758,7 +778,7 @@ async function addFlowSlide(id){
     toast("Added after the slide you're on."); track("flow-add", id); try { setReset(true); } catch(e) {}
   } catch(e) { toast("Couldn't add it: " + e.message); }
 }
-$("flowRefresh").onclick = () => loadFlow(true);
+$("flowRefresh").onclick = () => { $("flowType").innerHTML = `<option value="">All slide types</option>`; loadFlow(true); };
 // ---------- Presentations sub-views ----------
 function showDeckView(id){ if (id === "flowView") setTimeout(() => loadFlow(false), 50); $("decksHome").hidden = !!id; ["flowView","formatView","skillsView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
 document.querySelectorAll(".opencard").forEach(c => c.onclick = () => showDeckView(c.dataset.view));
