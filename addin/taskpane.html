@@ -515,7 +515,7 @@ async function insertAsset(btn){
     // a picture already on the slide is selected: swap it and keep its shape
     if (a.kind === "image" && SWAP) {
       if (!ready()) { done("Open this inside PowerPoint to use it."); return; }
-      try { await swapSelectedPicture(a, b64); done("Swapped. The picture kept its size, position and shape."); track("swap-image", a.id); }
+      try { if (await tryUndo("swap:" + a.id)) { done("Undone. The original picture is back."); return; } await swapSelectedPicture(a, b64); done("Swapped. Click the same image again to undo."); track("swap-image", a.id); }
       catch(e) { done(e.message); track("swap-fail", e.message.slice(0, 80)); }
       return;
     }
@@ -523,6 +523,33 @@ async function insertAsset(btn){
   } catch(e){ done("Couldn't add it: " + e.message); }
 }
 
+
+// ---------- Slide replace + one-step undo ----------
+let UNDO = null; // { key, slideId, b64 } – the slide as it was before the last panel edit
+async function replaceSlide(oldId, newB64, originalB64, key){
+  const freshId = await PowerPoint.run(async ctx => {
+    ctx.presentation.insertSlidesFromBase64(newB64, { formatting: "UseDestinationTheme", targetSlideId: oldId }); await ctx.sync();
+    const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
+    const i = all.items.findIndex(x => x.id === oldId); const fresh = all.items[i + 1];
+    try { ctx.presentation.setSelectedSlides([fresh.id]); await ctx.sync(); } catch(e) {}
+    ctx.presentation.slides.getItem(oldId).delete(); await ctx.sync();
+    const chk = ctx.presentation.slides; chk.load("items/id"); await ctx.sync();
+    if (chk.items.some(x => x.id === oldId)) throw new Error("PowerPoint kept the old copy of the slide. Delete the slide just before the edited one.");
+    return fresh.id;
+  });
+  UNDO = originalB64 && key ? { key, slideId: freshId, b64: originalB64 } : null;
+  return freshId;
+}
+// if the same action is clicked again on the slide it just changed, put the slide back
+async function tryUndo(key){
+  if (!UNDO || UNDO.key !== key) return false;
+  let here = null;
+  await PowerPoint.run(async ctx => { const s = ctx.presentation.getSelectedSlides(); s.load("items/id"); await ctx.sync(); here = s.items.length ? s.items[0].id : null; });
+  if (here !== UNDO.slideId) { UNDO = null; return false; }
+  const u = UNDO; UNDO = null;
+  await replaceSlide(u.slideId, u.b64, null, null);
+  return true;
+}
 // swaps the one selected picture; throws a plain-English reason if it can't
 async function swapSelectedPicture(a, b64){
   const req = Office.context.requirements;
@@ -542,15 +569,7 @@ async function swapSelectedPicture(a, b64){
   const bmp = await createImageBitmap(new Blob([bytes]));
   const out = await swapPictureInSlide(info.b64, info.shape, { bytes, ext: /\.png$/i.test(a.file) ? "png" : "jpg", w: bmp.width, h: bmp.height }, info.frame);
   if (!out) throw new Error(`The selected item ("${info.shape.name}", ${info.shape.type}) isn't a picture I can swap. If it's an empty picture box, turn Image swap off and click an image to fill it.`);
-  await PowerPoint.run(async ctx => {
-    ctx.presentation.insertSlidesFromBase64(out, { formatting: "UseDestinationTheme", targetSlideId: info.slideId });
-    await ctx.sync();
-    const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
-    const i = all.items.findIndex(x => x.id === info.slideId);
-    const fresh = all.items[i + 1];
-    all.items[i].delete(); await ctx.sync();
-    try { ctx.presentation.setSelectedSlides([fresh.id]); await ctx.sync(); } catch(e) {}
-  });
+  await replaceSlide(info.slideId, out, info.b64, "swap:" + a.id);
 }
 let SWAP = false;
 function setSwap(on){ SWAP = on; const b = $("swapMode"); b.setAttribute("aria-checked", on); b.classList.toggle("on", on); $("swapState").textContent = on ? "On" : "Off"; $("swapHint").hidden = !on; }
@@ -590,18 +609,12 @@ async function sendSelectedToBack(){
   if (!moved) throw new Error("Couldn't find the selected item on the slide.");
   zip.file(path, new XMLSerializer().serializeToString(doc));
   const out = await zip.generateAsync({ type: "base64" });
-  await PowerPoint.run(async ctx => {
-    ctx.presentation.insertSlidesFromBase64(out, { formatting: "UseDestinationTheme", targetSlideId: info.slideId }); await ctx.sync();
-    const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
-    const i = all.items.findIndex(x => x.id === info.slideId); const fresh = all.items[i + 1];
-    all.items[i].delete(); await ctx.sync();
-    try { ctx.presentation.setSelectedSlides([fresh.id]); await ctx.sync(); } catch(e) {}
-  });
+  await replaceSlide(info.slideId, out, info.b64, "back");
 }
 $("sendBack").onclick = async () => {
   track("send-to-back");
   if (!ready()) { toast("Open this inside PowerPoint to use it."); return; }
-  try { await sendSelectedToBack(); toast("Sent to the back."); } catch(e) { toast(e.message); }
+  try { if (await tryUndo("back")) { toast("Undone."); return; } await sendSelectedToBack(); toast("Sent to the back. Click again to undo."); } catch(e) { toast(e.message); }
 };
 // ---------- Skills downloads ----------
 document.querySelectorAll(".dlbtn").forEach(b => b.onclick = () => {
@@ -628,7 +641,8 @@ async function onText(fn){
 }
 
 // rebuild the current slide with an XML edit to the selected items
-async function rebuildSelected(mutate, what){
+async function rebuildSelected(mutate, what, key){
+  if (await tryUndo(key)) return "undone";
   if (!Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) throw new Error("This version of PowerPoint can't do that from the panel yet. Updating Microsoft 365 should fix it.");
   let info = null;
   await PowerPoint.run(async ctx => {
@@ -640,13 +654,7 @@ async function rebuildSelected(mutate, what){
   });
   const out = await continuEdits.editSlideXml(info.b64, info.targets, mutate);
   if (!out) throw new Error(`That doesn't look like ${what}. Select ${what} and try again.`);
-  await PowerPoint.run(async ctx => {
-    ctx.presentation.insertSlidesFromBase64(out, { formatting: "UseDestinationTheme", targetSlideId: info.slideId }); await ctx.sync();
-    const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
-    const i = all.items.findIndex(x => x.id === info.slideId); const fresh = all.items[i + 1];
-    all.items[i].delete(); await ctx.sync();
-    try { ctx.presentation.setSelectedSlides([fresh.id]); await ctx.sync(); } catch(e) {}
-  });
+  await replaceSlide(info.slideId, out, info.b64, key);
 }
 const REBUILDS = {
   ticks: [() => continuEdits.ticks, "a text box"],
@@ -668,7 +676,7 @@ document.querySelectorAll(".frow").forEach(b => b.onclick = async () => {
   if (k === "swap") { document.querySelector('.tabs button[data-p=brand]').click(); $("aType").value = "Images"; $("aType").onchange(); setSwap(true); return; }
   if (k === "crop") { document.querySelector('.tabs button[data-p=help]').click(); open("crop-image"); return; }
   if (!ready()) { out.textContent = "Open this inside PowerPoint to use it."; return; }
-  if (REBUILDS[k]) { try { await rebuildSelected(REBUILDS[k][0](), REBUILDS[k][1]); toast("Done."); } catch(e) { toast(e.message); } return; }
+  if (REBUILDS[k]) { try { const r = await rebuildSelected(REBUILDS[k][0](), REBUILDS[k][1], "fmt:" + k); toast(r === "undone" ? "Undone. The slide is back as it was." : "Done. Click it again to undo."); } catch(e) { toast(e.message); } return; }
   try { await onText(FORMATS[k]); out.textContent = "Done."; toast("Done."); } catch(e) { out.textContent = e.message.startsWith("Select") ? e.message : "Couldn't do that here: " + e.message; toast(out.textContent); }
 });
 $("aType").onchange = () => { $("aCat").value = ""; $("aQ").value = ""; renderAssets(); }; $("aQ").oninput = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
