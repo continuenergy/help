@@ -78,7 +78,7 @@ header .brand{display:flex;align-items:center;gap:10px}
 .mode{all:unset;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);background:var(--surface);border:1px solid var(--line)}
 .mode:hover{outline:1px solid var(--accentText)}
 .mode .sun{display:none}html[data-theme=light] .mode .sun{display:block}html[data-theme=light] .mode .moon{display:none}
-#splash{position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);transition:opacity .45s ease}
+#splash{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);transition:opacity .45s ease}
 #splash .splogo{width:150px;height:auto;opacity:0;transform:scale(.96);animation:lg .6s ease forwards}
 #splash.gone{opacity:0;pointer-events:none}
 @keyframes lg{to{opacity:1;transform:none}}
@@ -362,6 +362,18 @@ html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
 .eea b{display:block;font-weight:500;font-size:15px}
 .eea small{display:block;font-size:13.5px;color:var(--muted);margin-top:2px}
 #companyRow[hidden]{display:none}
+.fab{all:unset;cursor:pointer;position:fixed;right:14px;bottom:14px;z-index:15;display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:24px;background:var(--accent);color:#2A4356;font-size:14.5px;font-weight:500;box-shadow:0 6px 18px rgba(42,67,86,.28);transition:transform .2s}
+.fab:hover{transform:translateY(-2px)}
+.scrim{position:fixed;inset:0;z-index:16;background:rgba(20,32,44,.35)}
+.scrim[hidden],.sheet[hidden]{display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:17;max-height:78vh;overflow:auto;background:var(--bg);border-radius:24px 24px 0 0;padding:14px 16px 24px;box-shadow:0 -10px 30px rgba(0,0,0,.18);animation:up .22s ease}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.sheethd{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px}
+.sheethd h3{font-weight:500;font-size:22px;margin:0}
+.sheetx{all:unset;cursor:pointer;width:38px;height:38px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.sheetx:hover{outline:2px solid var(--accent)}
+body{padding-bottom:70px}
+#toast{bottom:70px}
 </style>
 </head>
 <body>
@@ -425,7 +437,6 @@ html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
   </div>
   <button class="card opencard t-sage" data-view="flowView"><span><h4>Add individual slides</h4><p>Browse the slide library and add individual slides to your presentation.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   <button class="card opencard t-stone" data-view="storyView"><span><h4>Telling the Continu story</h4><p>Who we talk to, the story anchors, and the Endless Energy Accelerator, at a glance.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
-  <button class="card opencard t-sky" data-view="formatView"><span><h4>Quick formatting</h4><p>One-click fixes for text, bullets and pictures, in the Continu style.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   <button class="card opencard t-mauve" data-view="skillsView"><span><h4>AI skills</h4><p>The Continu skills that teach ChatGPT to build presentations, documents and help the Continu way.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   </div>
   <div class="subview" id="skillsView" hidden>
@@ -462,18 +473,6 @@ html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
     <div class="flowbar"><p class="count" id="flowCount"></p><button class="pill" id="flowRefresh"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Refresh</button></div>
     <div id="flowGroups"></div>
   </div>
-  <div class="subview" id="formatView" hidden>
-    <button class="back sub-back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Presentations</button>
-    <h3 class="subh">Quick formatting</h3>
-
-  <p class="intro">Select some text or a picture on your slide, then click what you want to do.</p>
-  <h3 class="fgh">Text</h3>
-  <div class="flist">
-    <button class="frow" data-f="green"><span class="fic"><span class="sw" style="background:#B5EB03"></span></span><span class="ft"><b>Make text Continu green</b><small>Turns the selected text, or all text in the selected box, green.</small></span></button>
-    <button class="frow" data-f="navy"><span class="fic"><span class="sw" style="background:#2A4356"></span></span><span class="ft"><b>Make text navy</b><small>For text on light backgrounds.</small></span></button>
-    <button class="frow" data-f="white"><span class="fic"><span class="sw" style="background:#fff"></span></span><span class="ft"><b>Make text white</b><small>For text on navy or on photos.</small></span></button>
-    <button class="frow" data-f="bold"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></svg></span><span class="ft"><b>Make text bold, or back to regular</b><small>Click again to switch it back.</small></span></button>
-  </div>
   <h3 class="fgh">Lists</h3>
   <div class="flist">
     <button class="frow" data-f="bullets"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/><path d="M9 7h11M9 12h11M9 17h11"/></svg></span><span class="ft"><b>Turn bullets on or off</b><small>For the selected lines or box.</small></span></button>
@@ -491,6 +490,21 @@ html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
   </div>
 </section>
 
+<button class="fab" id="fab" aria-haspopup="dialog"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.4 2.6a2 2 0 0 1 2.9 2.9L12 14.8 9.2 12z"/><path d="M9.2 12c-2 0-3.7 1.6-3.7 3.7 0 1.6-1 2.6-2.5 3.1 1 1.2 2.6 1.9 4.4 1.9 3 0 5.3-2.4 5.3-5.3z"/></svg><span>Quick format</span></button>
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="Quick formatting" hidden>
+  <div class="sheethd"><h3>Quick formatting</h3><button class="sheetx" id="sheetX" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+
+
+  <p class="intro">Select some text or a picture on your slide, then click what you want to do.</p>
+  <h3 class="fgh">Text</h3>
+  <div class="flist">
+    <button class="frow" data-f="green"><span class="fic"><span class="sw" style="background:#B5EB03"></span></span><span class="ft"><b>Make text Continu green</b><small>Turns the selected text, or all text in the selected box, green.</small></span></button>
+    <button class="frow" data-f="navy"><span class="fic"><span class="sw" style="background:#2A4356"></span></span><span class="ft"><b>Make text navy</b><small>For text on light backgrounds.</small></span></button>
+    <button class="frow" data-f="white"><span class="fic"><span class="sw" style="background:#fff"></span></span><span class="ft"><b>Make text white</b><small>For text on navy or on photos.</small></span></button>
+    <button class="frow" data-f="bold"><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></svg></span><span class="ft"><b>Make text bold, or back to regular</b><small>Click again to switch it back.</small></span></button>
+  
+</div>
 <script>
 const TOPICS = [{"id": "crop-image", "area": "Images", "title": "Crop an image", "keywords": "trim cut picture photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click Crop (in the Size group)", "Drag the picture or its corners to reposition it", "Click Crop again, or press Esc, to finish"], "video": "crop-image.mp4"}, {"id": "replace-picture", "area": "Images", "title": "Replace a picture", "keywords": "swap change image photo", "steps": ["Right-click the picture", "Choose Change Picture → From a File…", "Pick your image – it keeps the same size and position"]}, {"id": "drag-picture", "area": "Images", "title": "Drag a picture in from a folder", "keywords": "drop finder explorer replace image photo", "steps": ["Open the folder in File Explorer next to PowerPoint", "Drag the picture onto the empty picture box on the slide", "Let go – it drops into the frame"], "video": "drag-picture.mp4"}, {"id": "fill-fit", "area": "Images", "title": "Fill or fit a picture in its frame", "keywords": "crop resize image photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click the small arrow under Crop", "Choose Fill to fill the frame, or Fit to show the whole picture", "Click Crop to finish"]}, {"id": "background-colour", "area": "Slides", "title": "Change the background colour", "keywords": "background color colour dark light fill navy white theme", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the light or dark version of the same layout – your content moves across"]}, {"id": "paste-text", "area": "Text", "title": "Paste text without its formatting", "keywords": "paste keep text only plain word email font wrong", "steps": ["Copy the text from Word, email or a web page", "Click into the text box on the slide", "Right-click and choose Keep Text Only (the clipboard icon with an A)"]}, {"id": "format-painter", "area": "Text", "title": "Copy formatting with Format Painter", "keywords": "style match brush copy format", "steps": ["Click inside the text that has the style you want", "On the Home tab, click Format Painter (the brush)", "Drag across the text you want to change"]}, {"id": "green-words", "area": "Text", "title": "Turn key words green", "keywords": "highlight colour color emphasis font", "steps": ["Select the word or phrase", "On the Home tab, click the arrow next to Font Colour", "Choose the Continu green from Theme Colours"]}, {"id": "fit-text", "area": "Text", "title": "Make text fit without shrinking it", "keywords": "overflow too long shrink font size autofit", "steps": ["Click into the text box and see where the text runs past the box", "Shorten the copy – aim for the same number of lines as the original", "Keep the font size as it is; never resize the box"]}, {"id": "link-text", "area": "Links", "title": "Hyperlink text", "keywords": "link url website hyperlink", "steps": ["Select the text you want to link", "Right-click and choose Link (or Ctrl+K)", "Type or paste the web address, then click OK", "Click away – the text is now a link"], "video": "link-text.mp4"}, {"id": "link-object", "area": "Links", "title": "Hyperlink a button or image", "keywords": "link shape icon picture button url slide", "steps": ["Click the edge of the button or image so the whole thing is selected", "Press Ctrl+K (or Insert → Link)", "Type a web address – or choose Place in This Document and pick a slide", "Click OK"]}, {"id": "new-slide", "area": "Slides", "title": "Add a new slide from a layout", "keywords": "insert new slide layout template", "steps": ["On the Home tab, click the arrow on New Slide", "Pick the layout you need", "Click into the boxes to add your content"]}, {"id": "change-layout", "area": "Slides", "title": "Change a slide's layout", "keywords": "columns 3 4 5 switch layout design", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the layout you want – e.g. 4 columns instead of 3 – your content moves into the new boxes"]}, {"id": "reset-slide", "area": "Slides", "title": "Reset a slide to its design", "keywords": "reset fix moved broken design", "steps": ["Select the slide", "On the Home tab, click Reset", "Positions, sizes and text styles go back to the template – your words stay"]}, {"id": "reorder-slides", "area": "Slides", "title": "Reorder slides by dragging", "keywords": "move order drag drop sections", "steps": ["In the slide thumbnails on the left, click a slide", "Drag it up or down to its new place", "Let go – drag onto a section name to move it into that section"]}, {"id": "add-table", "area": "Tables", "title": "Add a table", "keywords": "table grid rows columns insert", "steps": ["Click the table icon in an empty content box – or go to Insert → Table", "Choose how many columns and rows you need", "Click into the cells and type"]}, {"id": "table-rows", "area": "Tables", "title": "Add or delete rows and columns", "keywords": "table row column insert delete remove", "steps": ["Click into a cell next to where you want the change", "Open the table Layout tab", "Click Insert Above / Below / Left / Right – or Delete to remove"]}, {"id": "table-style", "area": "Tables", "title": "Apply the Continu table style", "keywords": "table style design colours colors header", "steps": ["Click anywhere in the table", "Open the Table Design tab", "Pick a style from the gallery – the first row uses the Continu colours"]}, {"id": "paste-excel-table", "area": "Tables", "title": "Paste a table from Excel", "keywords": "excel spreadsheet paste table cells", "steps": ["Copy the cells in Excel", "In PowerPoint, click on the slide and paste", "Click the paste icon that appears and choose Use Destination Styles", "Then apply a style from Table Design"]}, {"id": "add-chart", "area": "Charts", "title": "Add a chart", "keywords": "chart graph bar line pie insert", "steps": ["Click the chart icon in an empty content box – or go to Insert → Chart", "Pick the chart type and click OK", "Type your numbers into the sheet that opens, then close it"]}, {"id": "chart-data", "area": "Charts", "title": "Edit chart data", "keywords": "chart data numbers change update graph", "steps": ["Click the chart", "Open the Chart Design tab", "Click Edit Data, change the numbers, then close the sheet"]}, {"id": "chart-colours", "area": "Charts", "title": "Change chart colours to Continu colours", "keywords": "chart colours colors theme brand palette", "steps": ["Click the chart", "Open the Chart Design tab", "Click Change Colours and pick a palette – they all use the Continu theme colours"]}, {"id": "save-template", "area": "Saving", "title": "Save your deck as a template", "keywords": "save potx template file copy", "steps": ["Click File → Save As and pick a folder", "Under file type choose PowerPoint Template (*.potx)", "Name it and click Save – it appears under File → New → Personal"]}, {"id": "youtube-video", "area": "Videos", "title": "Add a YouTube video", "keywords": "youtube online video link embed web clip morning meeting stream", "steps": ["On YouTube, click Share under the video, then Copy", "In PowerPoint, click the slide – or click inside an empty media placeholder", "On the Insert tab, click Video, then Online Videos", "Paste the address and click Insert", "Drag the corners to size it. It plays inside the slide when you present, so you'll need an internet connection"]}, {"id": "video-playback", "area": "Videos", "title": "Play a video inside the slide or full screen", "keywords": "video playback full screen inside slide autoplay start automatically when clicked morning meeting", "steps": ["Click the video on the slide", "Open the Playback tab", "For Start, choose Automatically or When Clicked On", "Tick Play Full Screen to fill the screen, or leave it unticked to play inside the slide", "Press Shift+F5 to check it from this slide"]}];
 
@@ -913,9 +927,16 @@ $("flowRefresh").onclick = () => { $("flowType").innerHTML = `<option value="">A
 // story anchors link to their slides
 document.querySelectorAll(".anclink").forEach(b => b.onclick = () => { window.__pendingBeat = b.dataset.beat; track("story-anchor", b.dataset.beat); showDeckView("flowView"); });
 // ---------- Presentations sub-views ----------
-function showDeckView(id){ if (id === "flowView") setTimeout(() => loadFlow(false), 50); $("decksHome").hidden = !!id; ["flowView","formatView","skillsView","storyView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
+function showDeckView(id){ if (id === "flowView") setTimeout(() => loadFlow(false), 50); $("decksHome").hidden = !!id; ["flowView","skillsView","storyView"].forEach(v => $(v).hidden = v !== id); scrollTo(0,0); if (id) track("open-view", id); }
 document.querySelectorAll(".opencard").forEach(c => c.onclick = () => showDeckView(c.dataset.view));
 document.querySelectorAll(".sub-back").forEach(b => b.onclick = () => showDeckView(null));
+
+// ---------- Quick format sheet ----------
+function openSheet(on){ $("sheet").hidden = !on; $("scrim").hidden = !on; $("fab").setAttribute("aria-expanded", on); if (on) track("format-open"); }
+$("fab").onclick = () => openSheet($("sheet").hidden);
+$("scrim").onclick = () => openSheet(false);
+$("sheetX").onclick = () => openSheet(false);
+document.addEventListener("keydown", e => { if (e.key === "Escape") openSheet(false); });
 // ---------- Formatting ----------
 async function onText(fn){
   await PowerPoint.run(async ctx => {
@@ -964,8 +985,8 @@ document.querySelectorAll(".frow").forEach(b => b.onclick = async () => {
   const k = b.dataset.f, out = $("fOut");
   if (b.classList.contains("soon-row")) return;
   track("format", k);
-  if (k === "swap") { document.querySelector('.tabs button[data-p=brand]').click(); $("aType").value = "Images"; $("aType").onchange(); setSwap(true); return; }
-  if (k === "crop") { document.querySelector('.tabs button[data-p=help]').click(); open("crop-image"); return; }
+  if (k === "swap") { openSheet(false); document.querySelector('.tabs button[data-p=brand]').click(); $("aType").value = "Images"; $("aType").onchange(); setSwap(true); return; }
+  if (k === "crop") { openSheet(false); document.querySelector('.tabs button[data-p=help]').click(); open("crop-image"); return; }
   if (!ready()) { out.textContent = "Open this inside PowerPoint to use it."; return; }
   if (REBUILDS[k]) { try { const r = await rebuildSelected(REBUILDS[k][0](), REBUILDS[k][1], "fmt:" + k); toast(r === "undone" ? "Undone. The slide is back as it was." : "Done. Click it again to undo."); } catch(e) { toast(e.message); } return; }
   try { await onText(FORMATS[k]); out.textContent = "Done."; toast("Done."); } catch(e) { out.textContent = e.message.startsWith("Select") ? e.message : "Couldn't do that here: " + e.message; toast(out.textContent); }
