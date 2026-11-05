@@ -270,6 +270,8 @@ html[data-theme=dark]{--warn:#FDBA74}
 .confirm div{display:flex;gap:8px;flex-wrap:wrap}
 .pill.solid{background:var(--accent);color:#2A4356;border-color:var(--accent)}
 .pane .card p.ferr{color:var(--warn);font-size:14px;font-weight:500;margin:-12px 2px 18px}
+.confirm.keep{border-left-color:var(--accent)}
+.confirm.keep p+p{margin-top:-4px !important}
 </style>
 </head>
 <body>
@@ -324,6 +326,11 @@ html[data-theme=dark]{--warn:#FDBA74}
     <label class="chk"><input type="checkbox" id="bCall" checked><span>There's been a discovery call</span></label>
     <button class="btn" id="build">Build presentation</button>
     <div class="out" id="buildOut"></div>
+    <div class="confirm keep" id="libClean" hidden>
+      <p><b>Your new presentation is ready.</b> It's the first <span id="lcNew"></span> slides of this file.</p>
+      <p>Below it are <span id="lcOld"></span> other slides from the Continu slide library. You can delete those from this file now, so it only contains your presentation. Your presentation won't change, and the Continu template keeps its library for next time.</p>
+      <div><button class="pill" id="lcKeep">Keep them for now</button><button class="pill solid" id="lcGo">Delete the library slides</button></div>
+    </div>
   </div>
   <button class="card opencard t-sage" data-view="flowView"><span><h4>Build a slide flow</h4><p>Pick individual slides from the library, grouped by type, and add them to your presentation one at a time.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
   <button class="card opencard t-sky" data-view="formatView"><span><h4>Quick formatting</h4><p>One-click fixes for text, bullets and pictures, in the Continu style.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
@@ -703,6 +710,21 @@ $("bPresenter").addEventListener("change", () => { $("presErr").hidden = true; $
 $("bCompany").addEventListener("input", () => { $("noCompany").hidden = true; });
 $("ncAdd").onclick = () => { $("noCompany").hidden = true; $("bCompany").focus(); };
 $("ncGo").onclick = () => { window.__noCompanyOk = true; $("build").click(); };
+
+$("lcKeep").onclick = () => { $("libClean").hidden = true; toast("Kept. You can remove them later by deleting the slides after your presentation."); };
+$("lcGo").onclick = async () => {
+  const keep = new Set(window.__built || []); if (!keep.size) { $("libClean").hidden = true; return; }
+  track("remove-library");
+  try {
+    await PowerPoint.run(async ctx => {
+      const all = ctx.presentation.slides; all.load("items/id"); await ctx.sync();
+      if (keep.size) { try { ctx.presentation.setSelectedSlides([[...keep][0]]); await ctx.sync(); } catch(e) {} }
+      all.items.forEach(sl => { if (!keep.has(sl.id)) sl.delete(); });
+      await ctx.sync();
+    });
+    $("libClean").hidden = true; toast("Done. This file now only contains your presentation.");
+  } catch(e) { toast("Couldn't remove them: " + e.message); }
+};
 document.getElementById("build").onclick = async () => {
   const presenter = document.getElementById("bPresenter").value;
   if (!presenter) { $("presErr").hidden = false; $("bPresenter").classList.add("bad"); $("bPresenter").focus(); return; }
@@ -772,8 +794,12 @@ document.getElementById("build").onclick = async () => {
           await ctx.sync();
         }
       } catch(e) {}
+      window.__built = newIds.slice();
       const secs = Math.round((Date.now() - t0) / 1000);
       say(`Done: ${newIds.length} slides at the top of the deck in ${secs} seconds.\nCheck the first slide is the cover, then scroll through.`);
+      const total = ctx.presentation.slides; total.load("items"); await ctx.sync();
+      const others = total.items.length - newIds.length;
+      if (others > 0) { $("lcNew").textContent = newIds.length; $("lcOld").textContent = others; $("lcGo").textContent = `Delete the ${others} library slides`; $("libClean").hidden = false; }
     });
   } catch(e){ say("Stopped: " + e.message + "\nPowerPoint API support: " + need); }
 };
