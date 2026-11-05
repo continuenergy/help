@@ -735,7 +735,7 @@ async function loadFlow(force){
         if (/section|divider/i.test(rawLayout) || /^(yes|true)$/i.test(tg.CO_SECTION || "")) return; // skip the green library section headers
         const name = tg.CO_TYPE || tidyLayout(lays[i].name);
         if (!groups.has(name)) groups.set(name, []);
-        groups.get(name).push({ id: x.id, n: i + 1, raw: rawLayout, recipes: (tg.CO_RECIPE || "").split(/[|,; ]+/).map(r => r.split(":")[0].toLowerCase()).filter(Boolean) });
+        groups.get(name).push({ id: x.id, n: i + 1, raw: rawLayout, beat: (tg.CO_BEAT || "").toLowerCase().trim(), pos: Object.fromEntries((tg.CO_RECIPE || "").split(/[|,; ]+/).filter(Boolean).map(r => { const [k, n] = r.split(":"); return [k.toLowerCase(), +n || 999]; })), recipes: (tg.CO_RECIPE || "").split(/[|,; ]+/).map(r => r.split(":")[0].toLowerCase()).filter(Boolean) });
       });
       // the green library headers use the plain layout ("Agendas"); real slides use numbered ones ("Agendas | 01")
       const numbered = r => /[|:–-]\s*\d+[a-z]?\s*$/i.test(r) || /\s\d+\s*$/.test(r);
@@ -745,10 +745,15 @@ async function loadFlow(force){
     renderFlow();
   } catch(e) { $("flowCount").textContent = "Couldn't read the slides: " + e.message; }
 }
+const STORY = [ { key: "setting", label: "Setting the scene" }, { key: "conflict", label: "Conflict" }, { key: "big idea", label: "Big idea" }, { key: "resolution", label: "Resolution" }, { key: "proof", label: "Proof" }, { key: "close", label: "Close" } ];
 function deckOptions(){ return [...$("bType").options].map(o => ({ name: o.dataset.deck, key: o.value })); }
 function fillFlowFilters(){
   const t = $("flowType").value, d = $("flowDeck").value;
-  $("flowType").innerHTML = `<option value="">All slide types</option>` + FLOW.groups.map(g => `<option value="${esc(g.name)}">${esc(g.name)} (${g.slides.length})</option>`).join("");
+  const all = FLOW.groups.flatMap(g => g.slides);
+  const beats = STORY.filter(b => all.some(x => x.beat === b.key));
+  $("flowType").innerHTML = `<option value="">All slide types</option>`
+    + (beats.length ? `<optgroup label="Story stage">` + beats.map(b => `<option value="beat:${b.key}">${b.label} (${all.filter(x => x.beat === b.key).length})</option>`).join("") + `</optgroup>` : "")
+    + `<optgroup label="Slide type">` + FLOW.groups.map(g => `<option value="${esc(g.name)}">${esc(g.name)} (${g.slides.length})</option>`).join("") + `</optgroup>`;
   $("flowDeck").innerHTML = `<option value="">All deck types</option>` + deckOptions().map(o => `<option value="${esc(o.name)}">${esc(o.name)}</option>`).join("");
   $("flowType").value = t; $("flowDeck").value = d;
 }
@@ -757,11 +762,18 @@ function renderFlow(){
   if ($("flowType").options.length <= 1) fillFlowFilters();
   const t = $("flowType").value, dn = $("flowDeck").value;
   const key = dn ? (deckOptions().find(o => o.name === dn) || {}).key : "";
-  const view = FLOW.groups.filter(g => !t || g.name === t).map(g => ({ name: g.name, slides: g.slides.filter(x => !key || x.recipes.includes(key)) })).filter(g => g.slides.length);
+  let view;
+  if (key) { // deck: one flat list in the deck's own order
+    const list = FLOW.groups.flatMap(g => g.slides).filter(x => x.recipes.includes(key)).sort((a, b) => (a.pos[key] || 999) - (b.pos[key] || 999));
+    view = list.length ? [{ name: "", flat: true, slides: list }] : [];
+  } else if (t.startsWith("beat:")) {
+    const b = t.slice(5); const list = FLOW.groups.flatMap(g => g.slides).filter(x => x.beat === b);
+    view = list.length ? [{ name: "", flat: true, slides: list }] : [];
+  } else view = FLOW.groups.filter(g => !t || g.name === t);
   FLOW.view = view;
   const total = view.reduce((a, g) => a + g.slides.length, 0);
-  $("flowCount").textContent = total ? `${total} ${total === 1 ? "slide" : "slides"}${view.length > 1 ? ` in ${view.length} types` : ""}` : "No slides match that filter yet.";
-  $("flowGroups").innerHTML = view.map(g => `<section class="fsec"><h3 class="fsech">${esc(g.name)}<small>${g.slides.length}</small></h3><div class="fgrid">${g.slides.map(x => `<button class="fslide" data-id="${x.id}" title="Add a copy after the slide you're on"><span class="fth"><em>Slide ${x.n}</em></span></button>`).join("")}</div></section>`).join("");
+  $("flowCount").textContent = total ? `${total} ${total === 1 ? "slide" : "slides"}${key ? ", in deck order" : view.length > 1 ? ` in ${view.length} types` : ""}` : "No slides match that filter yet.";
+  $("flowGroups").innerHTML = view.map(g => `<section class="fsec">${g.flat ? "" : `<h3 class="fsech">${esc(g.name)}<small>${g.slides.length}</small></h3>`}<div class="fgrid">${g.slides.map(x => `<button class="fslide" data-id="${x.id}" title="Add a copy after the slide you're on"><span class="fth"><em>Slide ${x.n}</em></span></button>`).join("")}</div></section>`).join("");
   $("flowGroups").querySelectorAll(".fslide").forEach(b => b.onclick = () => addFlowSlide(b.dataset.id));
   watchThumbs();
 }
