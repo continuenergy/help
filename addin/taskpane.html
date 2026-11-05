@@ -1111,13 +1111,21 @@ document.getElementById("build").onclick = async () => {
         if (added) { try { ctx.presentation.slides.getItem(added.id).tags.add("CO_BUILT", "yes"); } catch(e) {} }
         say(`Copying slides… ${i + 1} of ${chosen.length}`);
       }
-      // cover line: "Prepared for <company> by <presenter>, Continu"
+      // cover lines: "Prepared for <company>" and "Presented by <presenter>, Continu"
       try {
         const cover = ctx.presentation.slides.getItem(newIds[0]); const shapes = cover.shapes; shapes.load("items/name"); await ctx.sync();
-        for (const sh of shapes.items){
-          try { const tr = sh.textFrame.textRange; tr.load("text"); await ctx.sync();
-            if (/Continu\s*$/.test(tr.text.trim()) && tr.text.length < 80){ tr.text = internal ? `Presented by ${presenter}, Continu` : `Prepared for ${company} by ${presenter}, Continu`; await ctx.sync(); break; }
-          } catch(e){}
+        // two boxes: "Prepared for …" (top) and "Presented by …" (bottom); falls back to the old single line
+        const boxes = [];
+        for (const sh of shapes.items){ try { const tr = sh.textFrame.textRange; tr.load("text"); await ctx.sync(); boxes.push({ sh, tr, t: (tr.text || "").trim() }); } catch(e){} }
+        const prep = boxes.find(b => /^prepared for\b/i.test(b.t) && !/\bby\b.*continu\s*$/i.test(b.t));
+        const pres = boxes.find(b => /^presented by\b/i.test(b.t));
+        if (prep || pres) {
+          if (pres) pres.tr.text = `Presented by ${presenter}, Continu`;
+          if (prep) { if (internal) { try { prep.sh.delete(); } catch(e) { prep.tr.text = ""; } } else prep.tr.text = `Prepared for ${company}`; }
+          await ctx.sync();
+        } else {
+          const one = boxes.find(b => /Continu\s*$/.test(b.t) && b.t.length < 80);
+          if (one) { one.tr.text = internal ? `Presented by ${presenter}, Continu` : `Prepared for ${company} by ${presenter}, Continu`; await ctx.sync(); }
         }
       } catch(e){}
       // Endless Energy device placeholders: a double space hides the prompt but keeps them as placeholders (so they stay on top)
