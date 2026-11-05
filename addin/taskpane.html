@@ -758,6 +758,20 @@ document.getElementById("build").onclick = async () => {
           } catch(e){}
         }
       } catch(e){}
+      // Endless Energy device placeholders: a double space hides the prompt but keeps them as placeholders (so they stay on top)
+      let filled = 0;
+      try {
+        say("Tidying the Endless Energy graphics…");
+        const sets = newIds.map(id => { const sh = ctx.presentation.slides.getItem(id).shapes; sh.load("items/name"); return sh; });
+        await ctx.sync();
+        const ranges = [];
+        sets.forEach(set => set.items.forEach(sh => { if (/endless\s*energy/i.test(sh.name || "")) { try { const tr = sh.textFrame.textRange; tr.load("text"); ranges.push(tr); } catch(e) {} } }));
+        if (ranges.length) {
+          try { await ctx.sync(); } catch(e) {}
+          ranges.forEach(tr => { try { if (!(tr.text || "").trim()) { tr.text = "  "; filled++; } } catch(e) {} });
+          await ctx.sync();
+        }
+      } catch(e) {}
       const secs = Math.round((Date.now() - t0) / 1000);
       say(`Done: ${newIds.length} slides at the top of the deck in ${secs} seconds.\nCheck the first slide is the cover, then scroll through.`);
     });
