@@ -1114,14 +1114,31 @@ document.getElementById("build").onclick = async () => {
       // cover lines: "Prepared for <company>" and "Presented by <presenter>, Continu"
       try {
         const cover = ctx.presentation.slides.getItem(newIds[0]); const shapes = cover.shapes; shapes.load("items/name"); await ctx.sync();
-        // two boxes: "Prepared for …" (top) and "Presented by …" (bottom); falls back to the old single line
+        // presenter box ("Name, Continu"), a divider line, then "Prepared for …"; the line and second box follow the name's length
+        shapes.load("items/name,items/type,items/left,items/top,items/width,items/height"); await ctx.sync();
         const boxes = [];
-        for (const sh of shapes.items){ try { const tr = sh.textFrame.textRange; tr.load("text"); await ctx.sync(); boxes.push({ sh, tr, t: (tr.text || "").trim() }); } catch(e){} }
+        for (const sh of shapes.items){ try { const tr = sh.textFrame.textRange; tr.load("text"); tr.font.load("name,size"); await ctx.sync(); boxes.push({ sh, tr, t: (tr.text || "").trim() }); } catch(e){} }
         const prep = boxes.find(b => /^prepared for\b/i.test(b.t) && !/\bby\b.*continu\s*$/i.test(b.t));
-        const pres = boxes.find(b => /^presented by\b/i.test(b.t));
+        const pres = boxes.find(b => b !== prep && (/^presented by\b/i.test(b.t) || (/,\s*continu\s*$/i.test(b.t) && !/^prepared for/i.test(b.t))));
         if (prep || pres) {
-          if (pres) pres.tr.text = `Presented by ${presenter}, Continu`;
-          if (prep) { if (internal) { try { prep.sh.delete(); } catch(e) { prep.tr.text = ""; } } else prep.tr.text = `Prepared for ${company}`; }
+          const measure = (txt, f) => { const c = document.createElement("canvas").getContext("2d"); c.font = `${f.size || 12}px "${f.name || "Effra"}", sans-serif`; return c.measureText(txt).width; };
+          let line = null;
+          if (pres && prep) line = shapes.items.find(x => x !== pres.sh && x !== prep.sh && /line/i.test(x.type || "") && x.left > pres.sh.left && x.left < prep.sh.left + 1) || shapes.items.find(x => x !== pres.sh && x !== prep.sh && x.width < 4 && x.left > pres.sh.left && x.left < prep.sh.left + 1);
+          if (pres) {
+            const oldW = measure(pres.t, pres.tr.font);
+            const label = /^presented by\b/i.test(pres.t) ? `Presented by ${presenter}, Continu` : `${presenter}, Continu`;
+            pres.tr.text = label;
+            const delta = measure(label, pres.tr.font) - oldW;
+            if (delta > 0) pres.sh.width = pres.sh.width + delta;
+            if (!internal && prep && Math.abs(delta) > 0.5 && prep.sh.left > pres.sh.left + 5 && Math.abs(prep.sh.top - pres.sh.top) < pres.sh.height) {
+              prep.sh.left = prep.sh.left + delta;
+              if (line) line.left = line.left + delta;
+            }
+          }
+          if (prep) {
+            if (internal) { try { prep.sh.delete(); } catch(e) { prep.tr.text = ""; } if (line) { try { line.delete(); } catch(e) {} } }
+            else prep.tr.text = `Prepared for ${company}`;
+          }
           await ctx.sync();
         } else {
           const one = boxes.find(b => /Continu\s*$/.test(b.t) && b.t.length < 80);
