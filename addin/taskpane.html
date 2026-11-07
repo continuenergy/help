@@ -10,6 +10,7 @@
 <script src="assets.js"></script>
 <script src="jszip.min.js"></script>
 <script src="swap.js"></script>
+<script src="fonts.js"></script>
 <script>
 (function(){var t=null;try{t=localStorage.getItem('continuStudioTheme')}catch(e){}
 if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','light');window.__themeStored=!!t})();
@@ -374,6 +375,27 @@ html[data-theme=dark] .sblock,html[data-theme=dark] .anc{background:#2A4356}
 .sheetx:hover{outline:2px solid var(--accent)}
 body{padding-bottom:70px}
 #toast{bottom:70px}
+/* font check: text lines under Build a presentation */
+.fontchk{margin:-4px 4px 20px;font-size:14px;line-height:1.45;color:var(--ink)}
+.fontchk p{margin:0 0 6px}
+.fsline{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.fsdot{width:10px;height:10px;border-radius:50%;flex:none;align-self:center;background:var(--muted)}
+.fsdot.ok{background:#5DBB2F}.fsdot.bad{background:var(--bad)}
+.fsmain{font-weight:500}
+.fsnote{color:var(--muted)}
+.tlink{all:unset;cursor:pointer;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-size:14px}
+.tlink:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.fswarn{font-weight:500;text-decoration:none;display:flex;gap:10px;align-items:baseline}
+.fswarn .fsdot{background:var(--bad)}
+.fswarn u{text-underline-offset:3px;font-weight:400}
+#fsList{margin:4px 0 0 20px}
+.fslinks{margin-left:20px !important;display:flex;gap:14px}.fslinks:not(:has(button:not([hidden]))){display:none}
+#fsList ul{list-style:none;margin:0 0 10px;padding:0}
+#fsList li{margin:0 0 4px}
+#fsList li b{font-weight:500}
+#fsList .fsnote{font-size:13px;margin:0 0 10px}
+:root{--bad:#D64545}
+html[data-theme=dark]{--bad:#FF8A80}
 </style>
 </head>
 <body>
@@ -433,6 +455,14 @@ body{padding-bottom:70px}
       <p><b>Your new presentation is ready.</b> It's the first <span id="lcNew"></span> slides of this file.</p>
       <p>Below it are <span id="lcOld"></span> other slides from the Continu slide library. You can delete those from this file now, so it only contains your presentation. Your presentation won't change, and the Continu template keeps its library for next time.</p>
       <div><button class="pill" id="lcKeep">Keep them for now</button><button class="pill solid" id="lcGo">Delete the library slides</button></div>
+    </div>
+  </div>
+  <div class="fontchk" id="fontChk" aria-live="polite">
+    <p class="fsline"><span class="fsdot" id="fsDot"></span><span class="fsmain" id="fsText">Checking fonts…</span><span class="fsnote" id="fsSub"></span></p>
+    <p class="fslinks"><button class="tlink" id="fsHelp" hidden>How to embed fonts</button><button class="tlink" id="fsAgain" hidden>Check again</button></p>
+    <div id="fsUnrec" hidden>
+      <button class="tlink fswarn" id="fsToggle" aria-expanded="false"><span class="fsdot"></span><span>Unrecognised fonts have been added to your presentation. <u id="fsToggleTxt">Show where</u></span></button>
+      <div id="fsList" hidden></div>
     </div>
   </div>
   <button class="card opencard t-sage" data-view="flowView"><span><h4>Add individual slides</h4><p>Browse the slide library and add individual slides to your presentation.</p></span><span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
@@ -506,7 +536,7 @@ body{padding-bottom:70px}
   <div class="out" id="fOut"></div>
 </div>
 <script>
-const TOPICS = [{"id": "crop-image", "area": "Images", "title": "Crop an image", "keywords": "trim cut picture photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click Crop (in the Size group)", "Drag the picture or its corners to reposition it", "Click Crop again, or press Esc, to finish"], "video": "crop-image.mp4"}, {"id": "replace-picture", "area": "Images", "title": "Replace a picture", "keywords": "swap change image photo", "steps": ["Right-click the picture", "Choose Change Picture → From a File…", "Pick your image – it keeps the same size and position"]}, {"id": "drag-picture", "area": "Images", "title": "Drag a picture in from a folder", "keywords": "drop finder explorer replace image photo", "steps": ["Open the folder in File Explorer next to PowerPoint", "Drag the picture onto the empty picture box on the slide", "Let go – it drops into the frame"], "video": "drag-picture.mp4"}, {"id": "fill-fit", "area": "Images", "title": "Fill or fit a picture in its frame", "keywords": "crop resize image photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click the small arrow under Crop", "Choose Fill to fill the frame, or Fit to show the whole picture", "Click Crop to finish"]}, {"id": "background-colour", "area": "Slides", "title": "Change the background colour", "keywords": "background color colour dark light fill navy white theme", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the light or dark version of the same layout – your content moves across"]}, {"id": "paste-text", "area": "Text", "title": "Paste text without its formatting", "keywords": "paste keep text only plain word email font wrong", "steps": ["Copy the text from Word, email or a web page", "Click into the text box on the slide", "Right-click and choose Keep Text Only (the clipboard icon with an A)"]}, {"id": "format-painter", "area": "Text", "title": "Copy formatting with Format Painter", "keywords": "style match brush copy format", "steps": ["Click inside the text that has the style you want", "On the Home tab, click Format Painter (the brush)", "Drag across the text you want to change"]}, {"id": "green-words", "area": "Text", "title": "Turn key words green", "keywords": "highlight colour color emphasis font", "steps": ["Select the word or phrase", "On the Home tab, click the arrow next to Font Colour", "Choose the Continu green from Theme Colours"]}, {"id": "fit-text", "area": "Text", "title": "Make text fit without shrinking it", "keywords": "overflow too long shrink font size autofit", "steps": ["Click into the text box and see where the text runs past the box", "Shorten the copy – aim for the same number of lines as the original", "Keep the font size as it is; never resize the box"]}, {"id": "link-text", "area": "Links", "title": "Hyperlink text", "keywords": "link url website hyperlink", "steps": ["Select the text you want to link", "Right-click and choose Link (or Ctrl+K)", "Type or paste the web address, then click OK", "Click away – the text is now a link"], "video": "link-text.mp4"}, {"id": "link-object", "area": "Links", "title": "Hyperlink a button or image", "keywords": "link shape icon picture button url slide", "steps": ["Click the edge of the button or image so the whole thing is selected", "Press Ctrl+K (or Insert → Link)", "Type a web address – or choose Place in This Document and pick a slide", "Click OK"]}, {"id": "new-slide", "area": "Slides", "title": "Add a new slide from a layout", "keywords": "insert new slide layout template", "steps": ["On the Home tab, click the arrow on New Slide", "Pick the layout you need", "Click into the boxes to add your content"]}, {"id": "change-layout", "area": "Slides", "title": "Change a slide's layout", "keywords": "columns 3 4 5 switch layout design", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the layout you want – e.g. 4 columns instead of 3 – your content moves into the new boxes"]}, {"id": "reset-slide", "area": "Slides", "title": "Reset a slide to its design", "keywords": "reset fix moved broken design", "steps": ["Select the slide", "On the Home tab, click Reset", "Positions, sizes and text styles go back to the template – your words stay"]}, {"id": "reorder-slides", "area": "Slides", "title": "Reorder slides by dragging", "keywords": "move order drag drop sections", "steps": ["In the slide thumbnails on the left, click a slide", "Drag it up or down to its new place", "Let go – drag onto a section name to move it into that section"]}, {"id": "add-table", "area": "Tables", "title": "Add a table", "keywords": "table grid rows columns insert", "steps": ["Click the table icon in an empty content box – or go to Insert → Table", "Choose how many columns and rows you need", "Click into the cells and type"]}, {"id": "table-rows", "area": "Tables", "title": "Add or delete rows and columns", "keywords": "table row column insert delete remove", "steps": ["Click into a cell next to where you want the change", "Open the table Layout tab", "Click Insert Above / Below / Left / Right – or Delete to remove"]}, {"id": "table-style", "area": "Tables", "title": "Apply the Continu table style", "keywords": "table style design colours colors header", "steps": ["Click anywhere in the table", "Open the Table Design tab", "Pick a style from the gallery – the first row uses the Continu colours"]}, {"id": "paste-excel-table", "area": "Tables", "title": "Paste a table from Excel", "keywords": "excel spreadsheet paste table cells", "steps": ["Copy the cells in Excel", "In PowerPoint, click on the slide and paste", "Click the paste icon that appears and choose Use Destination Styles", "Then apply a style from Table Design"]}, {"id": "add-chart", "area": "Charts", "title": "Add a chart", "keywords": "chart graph bar line pie insert", "steps": ["Click the chart icon in an empty content box – or go to Insert → Chart", "Pick the chart type and click OK", "Type your numbers into the sheet that opens, then close it"]}, {"id": "chart-data", "area": "Charts", "title": "Edit chart data", "keywords": "chart data numbers change update graph", "steps": ["Click the chart", "Open the Chart Design tab", "Click Edit Data, change the numbers, then close the sheet"]}, {"id": "chart-colours", "area": "Charts", "title": "Change chart colours to Continu colours", "keywords": "chart colours colors theme brand palette", "steps": ["Click the chart", "Open the Chart Design tab", "Click Change Colours and pick a palette – they all use the Continu theme colours"]}, {"id": "save-template", "area": "Saving", "title": "Save your deck as a template", "keywords": "save potx template file copy", "steps": ["Click File → Save As and pick a folder", "Under file type choose PowerPoint Template (*.potx)", "Name it and click Save – it appears under File → New → Personal"]}, {"id": "youtube-video", "area": "Videos", "title": "Add a YouTube video", "keywords": "youtube online video link embed web clip morning meeting stream", "steps": ["On YouTube, click Share under the video, then Copy", "In PowerPoint, click the slide – or click inside an empty media placeholder", "On the Insert tab, click Video, then Online Videos", "Paste the address and click Insert", "Drag the corners to size it. It plays inside the slide when you present, so you'll need an internet connection"]}, {"id": "video-playback", "area": "Videos", "title": "Play a video inside the slide or full screen", "keywords": "video playback full screen inside slide autoplay start automatically when clicked morning meeting", "steps": ["Click the video on the slide", "Open the Playback tab", "For Start, choose Automatically or When Clicked On", "Tick Play Full Screen to fill the screen, or leave it unticked to play inside the slide", "Press Shift+F5 to check it from this slide"]}];
+const TOPICS = [{"id": "crop-image", "area": "Images", "title": "Crop an image", "keywords": "trim cut picture photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click Crop (in the Size group)", "Drag the picture or its corners to reposition it", "Click Crop again, or press Esc, to finish"], "video": "crop-image.mp4"}, {"id": "replace-picture", "area": "Images", "title": "Replace a picture", "keywords": "swap change image photo", "steps": ["Right-click the picture", "Choose Change Picture → From a File…", "Pick your image – it keeps the same size and position"]}, {"id": "drag-picture", "area": "Images", "title": "Drag a picture in from a folder", "keywords": "drop finder explorer replace image photo", "steps": ["Open the folder in File Explorer next to PowerPoint", "Drag the picture onto the empty picture box on the slide", "Let go – it drops into the frame"], "video": "drag-picture.mp4"}, {"id": "fill-fit", "area": "Images", "title": "Fill or fit a picture in its frame", "keywords": "crop resize image photo", "steps": ["Click the picture", "Open the Picture Format tab", "Click the small arrow under Crop", "Choose Fill to fill the frame, or Fit to show the whole picture", "Click Crop to finish"]}, {"id": "background-colour", "area": "Slides", "title": "Change the background colour", "keywords": "background color colour dark light fill navy white theme", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the light or dark version of the same layout – your content moves across"]}, {"id": "paste-text", "area": "Text", "title": "Paste text without its formatting", "keywords": "paste keep text only plain word email font wrong", "steps": ["Copy the text from Word, email or a web page", "Click into the text box on the slide", "Right-click and choose Keep Text Only (the clipboard icon with an A)"]}, {"id": "format-painter", "area": "Text", "title": "Copy formatting with Format Painter", "keywords": "style match brush copy format", "steps": ["Click inside the text that has the style you want", "On the Home tab, click Format Painter (the brush)", "Drag across the text you want to change"]}, {"id": "green-words", "area": "Text", "title": "Turn key words green", "keywords": "highlight colour color emphasis font", "steps": ["Select the word or phrase", "On the Home tab, click the arrow next to Font Colour", "Choose the Continu green from Theme Colours"]}, {"id": "fit-text", "area": "Text", "title": "Make text fit without shrinking it", "keywords": "overflow too long shrink font size autofit", "steps": ["Click into the text box and see where the text runs past the box", "Shorten the copy – aim for the same number of lines as the original", "Keep the font size as it is; never resize the box"]}, {"id": "link-text", "area": "Links", "title": "Hyperlink text", "keywords": "link url website hyperlink", "steps": ["Select the text you want to link", "Right-click and choose Link (or Ctrl+K)", "Type or paste the web address, then click OK", "Click away – the text is now a link"], "video": "link-text.mp4"}, {"id": "link-object", "area": "Links", "title": "Hyperlink a button or image", "keywords": "link shape icon picture button url slide", "steps": ["Click the edge of the button or image so the whole thing is selected", "Press Ctrl+K (or Insert → Link)", "Type a web address – or choose Place in This Document and pick a slide", "Click OK"]}, {"id": "new-slide", "area": "Slides", "title": "Add a new slide from a layout", "keywords": "insert new slide layout template", "steps": ["On the Home tab, click the arrow on New Slide", "Pick the layout you need", "Click into the boxes to add your content"]}, {"id": "change-layout", "area": "Slides", "title": "Change a slide's layout", "keywords": "columns 3 4 5 switch layout design", "steps": ["Select the slide", "On the Home tab, click Layout", "Pick the layout you want – e.g. 4 columns instead of 3 – your content moves into the new boxes"]}, {"id": "reset-slide", "area": "Slides", "title": "Reset a slide to its design", "keywords": "reset fix moved broken design", "steps": ["Select the slide", "On the Home tab, click Reset", "Positions, sizes and text styles go back to the template – your words stay"]}, {"id": "reorder-slides", "area": "Slides", "title": "Reorder slides by dragging", "keywords": "move order drag drop sections", "steps": ["In the slide thumbnails on the left, click a slide", "Drag it up or down to its new place", "Let go – drag onto a section name to move it into that section"]}, {"id": "add-table", "area": "Tables", "title": "Add a table", "keywords": "table grid rows columns insert", "steps": ["Click the table icon in an empty content box – or go to Insert → Table", "Choose how many columns and rows you need", "Click into the cells and type"]}, {"id": "table-rows", "area": "Tables", "title": "Add or delete rows and columns", "keywords": "table row column insert delete remove", "steps": ["Click into a cell next to where you want the change", "Open the table Layout tab", "Click Insert Above / Below / Left / Right – or Delete to remove"]}, {"id": "table-style", "area": "Tables", "title": "Apply the Continu table style", "keywords": "table style design colours colors header", "steps": ["Click anywhere in the table", "Open the Table Design tab", "Pick a style from the gallery – the first row uses the Continu colours"]}, {"id": "paste-excel-table", "area": "Tables", "title": "Paste a table from Excel", "keywords": "excel spreadsheet paste table cells", "steps": ["Copy the cells in Excel", "In PowerPoint, click on the slide and paste", "Click the paste icon that appears and choose Use Destination Styles", "Then apply a style from Table Design"]}, {"id": "add-chart", "area": "Charts", "title": "Add a chart", "keywords": "chart graph bar line pie insert", "steps": ["Click the chart icon in an empty content box – or go to Insert → Chart", "Pick the chart type and click OK", "Type your numbers into the sheet that opens, then close it"]}, {"id": "chart-data", "area": "Charts", "title": "Edit chart data", "keywords": "chart data numbers change update graph", "steps": ["Click the chart", "Open the Chart Design tab", "Click Edit Data, change the numbers, then close the sheet"]}, {"id": "chart-colours", "area": "Charts", "title": "Change chart colours to Continu colours", "keywords": "chart colours colors theme brand palette", "steps": ["Click the chart", "Open the Chart Design tab", "Click Change Colours and pick a palette – they all use the Continu theme colours"]}, {"id": "embed-fonts", "area": "Saving", "title": "Embed fonts before saving", "keywords": "embed fonts effra missing wrong font conference organiser send share save", "steps": ["Click File, then Options (bottom left)", "Click Save", "Under Preserve fidelity when sharing this presentation, tick Embed fonts in the file", "Choose Embed all characters", "Click OK, then save the presentation"], "stepsMac": ["On the PowerPoint menu at the top left of the screen, click Preferences (Settings in newer versions)", "Click Save", "Under Font Embedding, tick Embed fonts in the file", "Choose Embed all characters", "Close the window, then press Cmd + S to save"], "stepsWeb": ["PowerPoint for the web can't embed fonts", "Click Editing (top right), then Open in Desktop App", "In the desktop app, follow these steps: File (or the PowerPoint menu on a Mac) → Options or Preferences → Save → tick Embed fonts in the file → Embed all characters", "Save the presentation in the desktop app"]}, {"id": "save-template", "area": "Saving", "title": "Save your deck as a template", "keywords": "save potx template file copy", "steps": ["Click File → Save As and pick a folder", "Under file type choose PowerPoint Template (*.potx)", "Name it and click Save – it appears under File → New → Personal"]}, {"id": "youtube-video", "area": "Videos", "title": "Add a YouTube video", "keywords": "youtube online video link embed web clip morning meeting stream", "steps": ["On YouTube, click Share under the video, then Copy", "In PowerPoint, click the slide – or click inside an empty media placeholder", "On the Insert tab, click Video, then Online Videos", "Paste the address and click Insert", "Drag the corners to size it. It plays inside the slide when you present, so you'll need an internet connection"]}, {"id": "video-playback", "area": "Videos", "title": "Play a video inside the slide or full screen", "keywords": "video playback full screen inside slide autoplay start automatically when clicked morning meeting", "steps": ["Click the video on the slide", "Open the Playback tab", "For Start, choose Automatically or When Clicked On", "Tick Play Full Screen to fill the screen, or leave it unticked to play inside the slide", "Press Shift+F5 to check it from this slide"]}];
 
 // Usage tracking hook: does nothing until an analytics service is connected.
 function track(event, detail){ try{ if (window.continuTrack) window.continuTrack(event, detail); }catch(e){} }
@@ -536,7 +566,7 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 let curArea = "";
 function fillArea(){ $("area").innerHTML = `<option value="">All topics (${TOPICS.length} guides)</option>` + areas.map(a => `<option value="${a}">${a} (${TOPICS.filter(t => t.area === a).length})</option>`).join(""); }
 fillArea();
-const TIMES = {"crop-image": "25 sec", "replace-picture": "15 sec", "drag-picture": "10 sec", "fill-fit": "15 sec", "background-colour": "15 sec", "paste-text": "10 sec", "format-painter": "15 sec", "green-words": "15 sec", "fit-text": "20 sec", "link-text": "25 sec", "link-object": "20 sec", "new-slide": "10 sec", "change-layout": "15 sec", "reset-slide": "10 sec", "reorder-slides": "10 sec", "add-table": "15 sec", "table-rows": "15 sec", "table-style": "10 sec", "paste-excel-table": "15 sec", "add-chart": "20 sec", "chart-data": "15 sec", "chart-colours": "10 sec", "save-template": "15 sec"};
+const TIMES = {"embed-fonts": "20 sec", "crop-image": "25 sec", "replace-picture": "15 sec", "drag-picture": "10 sec", "fill-fit": "15 sec", "background-colour": "15 sec", "paste-text": "10 sec", "format-painter": "15 sec", "green-words": "15 sec", "fit-text": "20 sec", "link-text": "25 sec", "link-object": "20 sec", "new-slide": "10 sec", "change-layout": "15 sec", "reset-slide": "10 sec", "reorder-slides": "10 sec", "add-table": "15 sec", "table-rows": "15 sec", "table-style": "10 sec", "paste-excel-table": "15 sec", "add-chart": "20 sec", "chart-data": "15 sec", "chart-colours": "10 sec", "save-template": "15 sec"};
 const TONES = ["#B5EB03", "#A5D4F0", "#9AC490", "#CEA1C6", "#C2D0DA", "#B8C2B2"];
 const ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg>';
 // test: coloured cards for the Images topic only
@@ -568,12 +598,14 @@ function render(){
   }
   $("list").querySelectorAll(".row,.gcard,.ccard").forEach(r => r.onclick = () => open(r.dataset.id));
 }
+function platform(){ try { const P = Office.PlatformType, p = Office.context.platform; return p === P.Mac ? "mac" : p === P.OfficeOnline ? "web" : "pc"; } catch(e) { return /Mac/.test(navigator.platform) ? "mac" : "pc"; } }
+function stepsFor(t){ const p = platform(); return (p === "mac" && t.stepsMac) || (p === "web" && t.stepsWeb) || t.steps; }
 function open(id){
   const t = TOPICS.find(x => x.id === id); if (!t) return;
   $("listView").hidden = true; $("detailView").hidden = false;
   $("detailView").innerHTML = `<button class="back" id="back"><span class="bk" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>Back</button><div class="a">${t.area}</div><h3>${t.title}</h3>` +
     (t.video ? `<div class="player" id="player"><video muted loop playsinline preload="metadata" poster="${t.video.replace(".mp4", ".jpg")}" src="${t.video}"></video><button class="play" aria-label="Play the video"><span><svg width="22" height="24" viewBox="0 0 22 24"><path d="M2 2 L20 12 L2 22 Z" fill="#324E64"/></svg></span></button></div>` : `<div class="soon">The animation for this one is coming soon. The steps are below.</div>`) +
-    `<ol>${t.steps.map(s => `<li>${s}</li>`).join("")}</ol>`;
+    `<ol>${stepsFor(t).map(s => `<li>${s}</li>`).join("")}</ol>`;
   const pl = $("player");
   if (pl) pl.querySelector(".play").onclick = () => { const v = pl.querySelector("video"); v.controls = true; pl.classList.add("started"); v.play().catch(()=>{}); track("play-video", id); };
   $("back").onclick = () => { const v = $("detailView").querySelector("video"); if (v) v.pause(); $("detailView").hidden = true; $("listView").hidden = false; };
@@ -994,6 +1026,118 @@ document.querySelectorAll(".frow").forEach(b => b.onclick = async () => {
 $("aType").onchange = () => { $("aCat").value = ""; $("aQ").value = ""; renderAssets(); }; $("aQ").oninput = renderAssets; $("aCat").onchange = renderAssets; renderAssets();
 
 // fonts
+// ---------- Font check: embedding status and unrecognised fonts ----------
+const FONTS = { embedded: null, subset: false, bySlide: new Map(), busy: false, lastFull: 0, lastSlide: {}, known: new Set() };
+function slideNums(ids, order){ return ids.map(id => order.indexOf(id) + 1).filter(n => n > 0).sort((a, b) => a - b); }
+async function slideOrder(){ let ids = []; await PowerPoint.run(async ctx => { const a = ctx.presentation.slides; a.load("items/id"); await ctx.sync(); ids = a.items.map(x => x.id); }); return ids; }
+function fontMap(order){
+  const m = new Map();
+  FONTS.bySlide.forEach((set, id) => { if (!order.includes(id)) { FONTS.bySlide.delete(id); return; } set.forEach(f => { if (!m.has(f)) m.set(f, []); m.get(f).push(id); }); });
+  return m;
+}
+async function renderFonts(){
+  const web = platform() === "web", dot = $("fsDot");
+  dot.className = "fsdot" + (FONTS.embedded === null ? "" : FONTS.embedded ? " ok" : " bad");
+  if (FONTS.embedded === null) { $("fsText").textContent = "Checking fonts…"; $("fsSub").textContent = ""; $("fsHelp").hidden = $("fsAgain").hidden = true; }
+  else if (FONTS.embedded) { $("fsText").textContent = "Fonts embedded"; $("fsSub").textContent = web ? "Do the final save in the desktop app." : FONTS.subset ? "Only the characters used. Choose Embed all characters so others can edit." : ""; $("fsHelp").hidden = !(web || FONTS.subset); $("fsAgain").hidden = !FONTS.subset; }
+  else { $("fsText").textContent = "Fonts not embedded"; $("fsSub").textContent = web ? "Open in the desktop app to embed fonts before saving." : "Embed fonts before saving."; $("fsHelp").hidden = false; $("fsAgain").hidden = false; }
+  let order = []; try { order = await slideOrder(); } catch(e) {}
+  const m = fontMap(order);
+  $("fsUnrec").hidden = !m.size;
+  if (!m.size) { $("fsList").hidden = true; $("fsToggle").setAttribute("aria-expanded", "false"); $("fsToggleTxt").textContent = "Show where"; return; }
+  const rows = [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([f, ids]) => { const n = slideNums(ids, order); return `<li><b>${esc(f)}</b> – ${n.length === 1 ? "slide" : "slides"} ${n.map(x => `<button class="tlink fsgo" data-n="${x}">${x}</button>`).join(", ")}</li>`; }).join("");
+  $("fsList").innerHTML = `<ul>${rows}</ul><p class="fsnote">Converting changes bold text to Effra Medium, light text to Effra Light, and everything else to Effra Regular.</p><button class="pill solid" id="fsConvert">Convert to Effra</button><div class="out" id="fsOut"></div>`;
+  $("fsList").querySelectorAll(".fsgo").forEach(b => b.onclick = async () => { const id = order[+b.dataset.n - 1]; try { await PowerPoint.run(async ctx => { ctx.presentation.setSelectedSlides([id]); await ctx.sync(); }); } catch(e) {} });
+  $("fsConvert").onclick = convertFonts;
+}
+function noteNew(){
+  const all = new Set(); FONTS.bySlide.forEach(s => s.forEach(f => all.add(f)));
+  const fresh = [...all].filter(f => !FONTS.known.has(f));
+  FONTS.known = all;
+  return fresh;
+}
+async function fullFontCheck(){
+  if (!ready() || FONTS.busy) return;
+  FONTS.busy = true;
+  try {
+    const r = await continuFonts.scanFile();
+    const order = await slideOrder();
+    FONTS.embedded = r.embedded; FONTS.subset = r.subset; FONTS.bySlide = new Map();
+    r.perSlide.forEach((set, i) => { if (set.size && order[i]) FONTS.bySlide.set(order[i], set); });
+    FONTS.lastFull = Date.now();
+    const fresh = noteNew(); if (fresh.length) track("fonts-unrecognised", fresh.join(", "));
+  } catch(e) { $("fsText").textContent = "Couldn't check the fonts"; $("fsSub").textContent = ""; $("fsAgain").hidden = false; FONTS.busy = false; return; }
+  FONTS.busy = false;
+  renderFonts();
+}
+// re-check the slide you're on, a moment after you stop clicking
+let fontTimer = null;
+function slideFontCheckSoon(){ clearTimeout(fontTimer); fontTimer = setTimeout(slideFontCheck, 1500); }
+async function slideFontCheck(){
+  if (!ready() || FONTS.busy || !Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) return;
+  FONTS.busy = true;
+  try {
+    let id = null, b64 = null;
+    await PowerPoint.run(async ctx => {
+      const s = ctx.presentation.getSelectedSlides(); s.load("items/id"); await ctx.sync();
+      if (!s.items.length) return;
+      id = s.items[0].id;
+      if (Date.now() - (FONTS.lastSlide[id] || 0) < 4000) { id = null; return; }
+      const ex = s.items[0].exportAsBase64(); await ctx.sync(); b64 = ex.value;
+    });
+    if (id && b64) {
+      FONTS.lastSlide[id] = Date.now();
+      const set = await continuFonts.scanSlide(b64);
+      if (set.size) FONTS.bySlide.set(id, set); else FONTS.bySlide.delete(id);
+      const fresh = noteNew();
+      FONTS.busy = false;
+      await renderFonts();
+      if (fresh.length) { toast("Unrecognised fonts have been added to your presentation: " + fresh.join(", ") + ". See the Presentations tab to convert them to Effra."); track("fonts-unrecognised", fresh.join(", ")); }
+      return;
+    }
+  } catch(e) {}
+  FONTS.busy = false;
+}
+async function convertFonts(){
+  const out = $("fsOut"), btn = $("fsConvert");
+  if (!Office.context.requirements.isSetSupported("PowerPointApi", "1.8")) { out.textContent = "This version of PowerPoint can't do that from the panel yet. Updating Microsoft 365 should fix it."; return; }
+  track("fonts-convert");
+  FONTS.busy = true; btn.disabled = true;
+  const order = await slideOrder(), ids = order.filter(id => FONTS.bySlide.has(id));
+  let done = 0, firstNew = null;
+  try {
+    for (const id of ids) {
+      out.textContent = `Converting slide ${order.indexOf(id) + 1} (${done + 1} of ${ids.length})…`;
+      let b64 = null;
+      await PowerPoint.run(async ctx => { const ex = ctx.presentation.slides.getItem(id).exportAsBase64(); await ctx.sync(); b64 = ex.value; });
+      const fixed = await continuFonts.convertSlide(b64);
+      const fresh = await replaceSlide(id, fixed, null, null);
+      if (!firstNew) firstNew = fresh;
+      FONTS.bySlide.delete(id);
+      // check the new copy: anything left is a font that sits somewhere the panel can't change
+      try { let nb = null; await PowerPoint.run(async ctx => { const ex = ctx.presentation.slides.getItem(fresh).exportAsBase64(); await ctx.sync(); nb = ex.value; }); const left = await continuFonts.scanSlide(nb); if (left.size) FONTS.bySlide.set(fresh, left); } catch(e) {}
+      done++;
+    }
+    if (firstNew) { try { await PowerPoint.run(async ctx => { ctx.presentation.setSelectedSlides([firstNew]); await ctx.sync(); }); } catch(e) {} }
+    FONTS.known = new Set(); noteNew();
+    FONTS.busy = false;
+    await renderFonts();
+    const left = FONTS.bySlide.size;
+    toast(left ? `Converted ${done} ${done === 1 ? "slide" : "slides"}. A few fonts are in places the panel can't change, such as pictures of text. They're still listed.` : `Done. ${done} ${done === 1 ? "slide is" : "slides are"} now in Effra.`);
+  } catch(e) {
+    FONTS.busy = false; btn.disabled = false;
+    out.textContent = `Converted ${done} of ${ids.length}, then stopped: ${e.message}`;
+  }
+}
+$("fsToggle").onclick = () => { const on = $("fsList").hidden; $("fsList").hidden = !on; $("fsToggle").setAttribute("aria-expanded", on); $("fsToggleTxt").textContent = on ? "Hide" : "Show where"; if (on) track("fonts-show"); };
+$("fsHelp").onclick = () => { document.querySelector('.tabs button[data-p=help]').click(); open("embed-fonts"); track("fonts-help"); };
+$("fsAgain").onclick = () => { FONTS.embedded = null; renderFonts(); fullFontCheck(); };
+document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - FONTS.lastFull > 60000) fullFontCheck(); });
+if (window.Office) Office.onReady(() => {
+  if (!ready()) { $("fontChk").hidden = true; return; }
+  setTimeout(fullFontCheck, 2500);
+  try { Office.context.document.addHandlerAsync(Office.EventType.DocumentSelectionChanged, slideFontCheckSoon); } catch(e) {}
+});
 
 
 // ---------- Build a deck (test) ----------
