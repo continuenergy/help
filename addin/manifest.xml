@@ -5,7 +5,7 @@
            xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
            xsi:type="TaskPaneApp">
   <Id>f525dd73-cc2e-4a64-ab05-7db98d785b59</Id>
-  <Version>1.4.0.0</Version>
+  <Version>1.4.1.0</Version>
   <ProviderName>Ideer Creative</ProviderName>
   <DefaultLocale>en-GB</DefaultLocale>
   <DisplayName DefaultValue="Continu Studio"/>
@@ -79,7 +79,7 @@
         <bt:String id="GetStarted.Title" DefaultValue="Continu Studio is ready"/>
         <bt:String id="Group.Label" DefaultValue="Studio"/>
         <bt:String id="Tab.Label" DefaultValue="Continu"/>
-        <bt:String id="Button.Label" DefaultValue="Continu Studio"/>
+        <bt:String id="Button.Label" DefaultValue="Continu"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description" DefaultValue="Click Continu Studio on the Home tab to build decks, add brand assets and get help."/>
